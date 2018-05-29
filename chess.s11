@@ -1,0 +1,204 @@
+; r0 - Current row index.
+; r1 - Current column index.
+main:
+      clr r0 ; Sets r0 to 0.
+      clr r1 ; Sets r1 to 0.
+      cmp Player, #1 ; Checking if the current color is white.
+      bne Black ; If the color is not white, branch to Black.
+      br White ; If the color is white, branch to White.
+
+
+; This method will check legal moves of all white pieces and add 1 to NumMoves each time a legal move is found.
+; r2- current cell address.
+; r3 - temporary row index (will be used once for another calculation).
+; r5 - temporary column index (will be used once for another calculation).
+White:
+      mov r0, r3  ; Putting index of the current row in r3.
+      mov r1, r5  ; Putting index of the current column in r5.
+      mov #Board, r2 ; Putting board array starting index in r2.
+      mul #16., r3 ; Multiplying the number of row by 16 (decimal) (length of each row in bytes).
+      mul #2, r5 ; Multiplying the number of column by 2 (decimal) (width of each column in bytes).
+      add r3, r2 ; Adding the number of bytes needed in order to point to the beginning of a row.
+      add r5, r2 ; Adding the number of bytes needed in order to point a cell in a row.
+      ; r2 will now contain the address of the current cell.
+      cmp (r2), #1 ; Checking if the current piece is white.
+      bne NextCell ; If the color of the current piece is not white skip to the next cell.
+      mov r0, r3 ; Setting r3 to the current row index (after changing it earlier).
+      sub #1, r3 ; Reducing row index by 1.
+      cmp r3, #0
+      blt NextCell ; If row index is less than 0, cannot move at all, skip to the next cell.
+      mov r1, r5 ; Setting r5 to the current column index (after changing it eariler).
+      add #1, r5 ; Increasing column index by 1.
+      cmp r5, #7
+      bgt LeftW ; If column index is bigger than 7, the current piece cannot move right, check legal moves to the left.
+      cmp -14.(r2), #1 ; Checking if the upper right piece is white.
+      beq LeftW ; If the upper right piece is white, cannot go there, check legal moves to the left.
+      cmp -14.(r2), #2 ; Checking if the upper right piece is black.
+      beq EatRW ; If the upper right piece is black, check if the white piece can eat it.
+      add #1, NumMoves ; If we got here the upper right cell contains 0, the white piece can move there. Adding 1 to NumMoves.
+      br LeftW ; Keep on checking legal moves to the left (cannot eat so we don't need to check an eating option).
+
+
+      ;This method will check an eating option for white pieces to the right.
+      ; r2- current cell address.
+      ; r3 - temporary row index .
+      ; r5 - temporary column index.
+      EatRW:
+            sub #1, r3 ; Reducing row index by 1.
+            cmp r3, #0
+            blt LeftW ; If r3 is less than 0, cannot eat (out of bounds). Check legal moves to the left.
+            add #1, r5 ;Increasing column index by 1.
+            cmp r5, #7
+            bgt LeftW ; If column index is bigger than 7, cannot eat (out of bounds). Check legal moves to the left.
+            ;If we got here, the cell which the current white piece should be placed after eating is in the board bounds, we need to check if it is empty.
+            cmp -28.(r2), #0 ; Checking if the cell is empty.
+            bne LeftW ; If the cell is not empty, cannot eat. Check legal moves to the left.
+            add #1, NumMoves ;If we got here, can eat, adding 1 to NumMoves.
+
+
+      ; This method will check legal moves of white pieces to the left.
+      ; r2- current cell address.
+      ; r3 - temporary row index .
+      ; r5 - temporary column index.
+      LeftW:
+            mov r0, r3 ; Putting index of the current row in r3.
+            sub #1, r3 ; Reducing row index by 1.
+            mov r1, r5 ; Putting index of the current column in r5.
+            sub #1, r5 ; Reducing column index by 1.
+            cmp r5, #0
+            blt NextCell ; If column index is less than 0, cannot move right, skip to the next cell.
+            cmp -18.(r2), #1 ; Checking if the upper left piece is white.
+            beq NextCell ; If the upper left piece is white, cannot move there, skip to the next cell.
+            cmp -18.(r2), #2 ; Checking if the upper left piece is black.
+            beq EatLW ; If the upper left piece is black, Check if the white piece can eat it.
+            add #1, NumMoves ; If we got here, upper left cell contains 0, can move there. Adding 1 to NumMoves.
+            br NextCell ; Skip to the next cell (cannot eat so we don't need to check an eating option).
+
+
+      ;This method will check an eating option for white pieces to the left.
+      ; r2- current cell address.
+      ; r3 - temporary row index .
+      ; r5 - temporary column index.
+      EatLW:
+            sub #1, r5 ; Reducing column index by 1.
+            cmp r5, #0
+            blt NextCell ; If column index is less than 0, cannot eat, skip to the next cell.
+            sub #1, r3 ; Reducing row index by 1.
+            cmp r3, #0
+            blt NextCell ; If r3 is less than 0, cannot eat (out of bounds). Skip to the next cell.
+            ;If we got here, the cell which the current white piece should be
+            ;placed in after eating is in the board bounds, Check if it is empty.
+            cmp -36.(r2), #0 ; Checking if the cell is empty.
+            bne NextCell ;If the cell is not empty, cannot eat. Skip to the next cell.
+            add #1, NumMoves ;If we got here, can eat, adding 1 to NumMoves.
+            br NextCell ; No more moving options, move to the next cell.
+
+
+            End: ;If we got here we checked all the cells of the array.
+            halt
+
+
+            ; This method will skip to the next cell by adding 1 to column index. If column
+            ; index is bigger than 7 sets it to 0 and adds 1 to row index.
+            ; r0 - Current row index.
+            ; r1 - Current column index.
+            NextCell:
+                     add #1, r1 ; Increasing column index by 1.
+                     cmp r1, #8 ; Checking if reached the end of the row.
+                     blt InRange ; Branch to InRange if the index of column is legal.
+                     clr r1 ; If we got here index of column reached the end of row. Sets it to 0.
+                     add #1, r0 ; Go to the next row.
+                     cmp r0, #7
+                     bgt End ; If index of row is bigger than 7 we reached the end of the board.
+
+                     ;Continues to the next cell once its indexes are valid.
+                     InRange:
+                             cmp Player, #1
+                             bne Black
+                             br White
+
+
+;This method will check legal moves of all black pieces and add 1 to NumMoves
+;each time a legal move is found.
+; r2- current cell address.
+; r3 - temporary row index (will be used once for another calculation).
+; r5 - temporary column index (will be used once for another calculation).
+Black:
+      mov r0, r3  ; Putting index of the current row in r3.
+      mov r1, r5  ; Putting index of the current column in r5.
+      mov #Board, r2 ; Putting board array starting index in r2.
+      mul #16., r3 ; Multiplying the number of row by 16 (decimal) (length of each row in bytes).
+      mul #2, r5 ; Multiplying the number of column by 2 (decimal) (width of each column in bytes).
+      add r3, r2 ;Adding the number of bytes needed in order to point to the beginning of a row.
+      add r5, r2 ; Adding the number of bytes needed in order to point a cell in a row.
+      ; r2 will now contain the address of the current cell.
+      cmp (r2), #2 ; Checking if the current piece is black.
+      bne NextCell ; If the color of the current piece is not black skip to the next cell.
+      mov r0, r3 ; Putting index of the current row in r3.
+      add #1, r3 ; Increasing row index by 1.
+      cmp r3, #7
+      bgt NextCell ; If row index is bigger than 7, cannot move at all, skip to the next cell.
+      mov r1, r5 ; Setting r5 to the current column index (after changing it eariler).
+      add #1, r5 ; Increasing column index by 1.
+      cmp r5, #7
+      bgt RightB ; If column index is bigger than 7, the current piece cannot move left, Check legal moves to the right.
+      cmp 18.(r2), #2 ; Checking if the lower right piece is black.
+      beq RightB ; If the lower left piece is black, cannot go there, Check legal moves to the right.
+      cmp 18.(r2), #1 ; Checking if the lower right piece is black.
+      beq EatLB ; If the lower right piece is white, check if the black piece can eat it.
+      add #1, NumMoves ; If we got here the lower right cell contains 0, the black piece can move there. Adding 1 to NumMoves.
+      br RightB ; Keep on checking legal moves to the right (cannot eat so we don't need to check an eating option).
+
+
+      ;This method will check an eating option for black pieces to the left.
+      ; r2- current cell address.
+      ; r3 - temporary row index .
+      ; r5 - temporary column index.
+      EatLB:
+            add #1, r3 ; Increasing row index by 1.
+            cmp r3, #7 ; If r3 is bigger than 7, cannot eat (out of bounds). Check legal moves to the right.
+            bgt RightB
+            add #1, r5 ;Increasing column index by 1.
+            cmp r5, #7
+            bgt RightB ; If column index is bigger than 7, cannot eat (out of bounds). Check legal moves to the right.
+            ;If we got here, the cell which the current black piece should be placed after eating is in the board bounds, we need to check if it is empty.
+            cmp 36.(r2), #0 ; Checking if the cell is empty.
+            bne RightB ; If the cell is not empty, cannot eat. Check legal moves to the right.
+            add #1, NumMoves ;If we got here, can eat, adding 1 to NumMoves.
+
+
+            ; This method will check legal moves to the right of black pieces.
+            ; r2- current cell address.
+            ; r3 - temporary row index .
+            ; r5 - temporary column index.
+      RightB:
+             mov r0, r3 ; Putting index of the current row in r3.
+             add #1, r3 ; Increasing row index by 1.
+             mov r1, r5 ; Putting index of the current column in r5.
+             sub #1, r5 ; Decreasing column index by 1.
+             cmp r5, #0
+             blt NextCell ; If column index is less than 0, cannot move right, skip to the next cell.
+             cmp 14.(r2), #2 ; Checking if the lower left piece is black.
+             beq NextCell ; If the lower left piece is white, cannot move there, skip to the next cell.
+             cmp 14.(r2), #1 ; Checking if the lower left piece is white.
+             beq EatRB ; If the lower left piece is white, check if the black piece can eat it.
+             add #1, NumMoves ; If we got here the lower left cell contains 0, the black piece can move there. Adding 1 to NumMoves.
+             br NextCell ;Skip to the next cell (cannot eat so we don't need to check an eating option).
+
+
+      ; This method will check an eating option for black pieces to the right.
+      ; r2- current cell address.
+      ; r3 - temporary row index .
+      ; r5 - temporary column index.
+      EatRB:
+            sub #1, r5 ; Reducing column index by 1.
+            cmp r5, #0
+            blt NextCell ; If column index is less than 0, cannot eat, skip to the next cell.
+            add #1, r3 ; Increasing row index by 1.
+            cmp r3, #7
+            bgt NextCell ; If r3 is bigger than 7, cannot eat (out of bounds). Skip to the next cell.
+            ;If we got here, the cell which the current white piece should be placed after eating is in the board bounds, Check if it is empty.
+            cmp 28.(r2), #0 ; Checking if the cell is empty.
+            bne NextCell ;If the cell is not empty, cannot eat. Skip to the next cell.
+            add #1, NumMoves ;If we got here, can eat, adding 1 to NumMoves.
+            br NextCell ; No more moving options, move to the next cell.
