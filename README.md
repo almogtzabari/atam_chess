@@ -1,1 +1,1 @@
-# atam_chess
+ATAM - HW3 Chess project
