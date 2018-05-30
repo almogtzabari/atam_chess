@@ -1,10 +1,15 @@
-; This method will count how many vessles from each color are on the given
-; board.
+; This method will count how many vessles from each color are there on the
+; given board.
+;
 ; Input:
 ; Label of the beginning of the board - will be stored at 2(sp).
+;
 ; Output:
-; Number of white vessels - will be stored at 4(sp).
-; Number of black vessels - will be stored at 6(sp).
+; Number of white vessels - after rts will be stored at 4(sp).
+; Number of black vessels - after rts will be stored at 2(sp).
+;
+; Notice: after rts 0(sp) will store the label of the board which is usually no
+; longer needed.
 countWB:
         mov r0, -(sp) ; Backing up r0. r0 will be used to scan the board.
         mov r1, -(sp) ; Backing up r1. r1 will be used to count white vessels.
@@ -19,10 +24,10 @@ countWB:
                 tst (r0) ;
                 beq endloop ; if (r0) is 0 then no player in this cell.
                 cmp (r0), 1
-                bne black++
+                bne addBLK
                 inc r1 ; Current cell is white. r1++ .
                 br endloop ; Go to next cell.
-        black++:
+        addBLK:
                 inc r2 ; Current cell is black. r2++ .
                 br endloop ; Go to next cell.
 
