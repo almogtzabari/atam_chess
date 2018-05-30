@@ -1,2 +1,6 @@
-; Input: 
+; Input:
+; 1. Label of the current board status - Will be stored at 4(sp).
+; 2. Current player's turn (1-white,2-black) - Will be stored at 2(sp).
+; Output:
+; Winning parameter - will be stored
 calcWP:
