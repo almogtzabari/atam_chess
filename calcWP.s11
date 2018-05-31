@@ -8,17 +8,19 @@
          mov 0, -(sp) ; Leaving blank space for output.
          move 8(sp), -(sp) ; Giving the label of the board as input.
          jsr pc, countWB ; Counter number of vessels from each color.
-         add #2, sp ; Popping the no longer needed board label.
+         add #2, sp ; Popping the no longer needed board label from stack.
          cmp 6(sp), 1
          beq WPforW ; if current player (input) is white - go to WPforW
-         ; If we got here then the current player is black.
-         mov (sp), r4 ; r4 = number of black vessels.
-         sub 2(sp), r4 ; r4 = r4 - number of white players.
+         ; If we got here then the current player is black. It means that
+         ; the last player to move was white.
+         mov 2(sp), r4 ; r4 = number of white vessels.
+         sub (sp), r4 ; r4 = r4 - number of black vessels.
          br endCalWP ; Jumping to the end of the method.
          WPforW:
-                ; If we got here current player is white.
-                mov 2(sp), r4 ; r4 = number of white vessels.
-                sub (sp), r4 ; r4 = r4 - number of black vessels.
+                ; If we got here current player is white. It means that the
+                ; last player to move was black.
+                mov (sp), r4 ; r4 = number of black vessels.
+                sub 2(sp), r4 ; r4 = r4 - number of white players.
                 br endCalWP ; Jumping to the end of the method.
 endCalWP:
          add #4, sp ; popping 2 items from stack (counters of W&B vessles)
