@@ -10,6 +10,21 @@
 ;
 ; Notice: after rts 0(sp) will store the label of the board which is usually no
 ; longer needed.
+
+.=torg+1000
+main:
+  mov #main, sp
+  mov #0, -(sp)
+  mov #0, -(sp)
+  mov #Board, -(sp)
+  jsr pc, countWB
+  tst (sp)+
+  clr r0
+  clr r1
+  mov (sp)+, r0
+  mov (sp), r1
+  halt
+
 countWB:
         mov r0, -(sp) ; Backing up r0. r0 will be used to scan the board.
         mov r1, -(sp) ; Backing up r1. r1 will be used to count white vessels.
@@ -43,3 +58,16 @@ countWB:
              mov (sp)+, r1 ; Restoring the value of r1.
              mov (sp)+, r0 ; Restoring the value of r0.
              rts pc
+   .=torg+5000
+
+             Board:
+                   .word 0, 0, 0, 2, 0, 0, 0, 2
+                   .word 0, 0, 0, 0, 0, 0, 0, 0
+                   .word 0, 0, 0, 0, 0, 0, 0, 0
+                   .word 0, 0, 0, 0, 2, 0, 0, 0
+                   .word 0, 0, 0, 0, 0, 0, 0, 0
+                   .word 0, 0, 0, 0, 0, 0, 0, 0
+                   .word 0, 0, 0, 0, 0, 0, 0, 0
+                   .word 0, 0, 1, 1, 0, 0, 0, 1
+
+             Player: .word 1
