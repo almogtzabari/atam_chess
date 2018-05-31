@@ -1,11 +1,9 @@
-
-
-
-
-
-
-
-;Checks if a given board is in a winning state for the given player.
+;This method checks if a given board is in a winning state for the given player.
+;Input -
+; - A number of player to check - will be stored in 4(sp).
+; - A label of the beggining of the board - will be stored in 6(sp).
+;Output -
+; - (-1) if the current player didn't win, 1 if the current player wins - will be stored in 2(sp).
 checkWin:
 tst -(sp) ; Allocating place for number of white pieces.
 tst -(sp) ; Allocating place for number of black pieces.
@@ -66,9 +64,10 @@ rts pc
 
 
 
-;This subroutine checks the number of moves for  a given player.
+;This method checks the number of moves for  a given player.
 ;Input:
 ; - A number of player to check, will be at 2(sp).
+;Output:
 ; - A number of moves to add to, will be at (sp).
 moveChk:
 ; r0 - Current row index.
@@ -289,3 +288,37 @@ cmp 28.(r2), #0 ; Checking if the cell is empty.
 bne skipcell ;If the cell is not empty, cannot eat. Skip to the next cell.
 add #1, 12.(sp) ;If we got here, can eat. Adding 1 to number of legal moves.
 br End ;Found a legal move.
+
+countWB:
+        mov r0, -(sp) ; Backing up r0. r0 will be used to scan the board.
+        mov r1, -(sp) ; Backing up r1. r1 will be used to count white vessels.
+        mov r2, -(sp) ; Backing up r2. r2 will be used to count black vessels.
+        mov r3, -(sp) ; Backing up r3. r3 will store the end of the board.
+        clr r1
+        clr r2
+        mov 10.(sp), r0 ; r0 = beginning of the board.
+        mov r0, r3 ; r3 = beginning of the board.
+        add #176, r3 ; r3 = end of the board.
+        cntloop:
+                tst (r0) ;
+                beq endloop ; if (r0) is 0 then no player in this cell.
+                cmp (r0), #1
+                bne addBLK
+                inc r1 ; Current cell is white. r1++ .
+                br endloop ; Go to next cell.
+        addBLK:
+                inc r2 ; Current cell is black. r2++ .
+                br endloop ; Go to next cell.
+
+     endloop:
+             add #2, r0 ; r0 will point to next cell in the board.
+             cmp r0,r3
+             ble cntloop ; if we are still in the board limits - go to cntloop.
+             ; If we got here we finished going through the entire board.
+             mov r1, 14.(sp) ; Writing white counter to stack.
+             mov r2, 12.(sp) ; Writing black counter to stack.
+             mov (sp)+, r3 ; Restoring the value of r3.
+             mov (sp)+, r2 ; Restoring the value of r2.
+             mov (sp)+, r1 ; Restoring the value of r1.
+             mov (sp)+, r0 ; Restoring the value of r0.
+             rts pc

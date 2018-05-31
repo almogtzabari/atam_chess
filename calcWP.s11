@@ -3,7 +3,7 @@
 ; 2. Current player's turn (1-white,2-black) - will be stored at 2(sp).
 ; Output:
 ; Winning parameter - will be stored at R4.
-  calcWP:
+  calcWP:         
          mov 0, -(sp) ; Leaving blank space for output.
          mov 0, -(sp) ; Leaving blank space for output.
          move 8(sp), -(sp) ; Giving the label of the board as input.

@@ -202,3 +202,18 @@ Black:
             bne NextCell ;If the cell is not empty, cannot eat. Skip to the next cell.
             add #1, NumMoves ;If we got here, can eat, adding 1 to NumMoves.
             br NextCell ; No more moving options, move to the next cell.
+
+.=torg+5000
+
+Board:
+      .word 0, 0, 0, 0, 0, 0, 0, 0
+      .word 0, 0, 1, 0, 0, 0, 0, 0
+      .word 0, 2, 0, 0, 0, 0, 0, 0
+      .word 0, 0, 0, 0, 0, 0, 0, 0
+      .word 0, 0, 0, 0, 0, 0, 0, 0
+      .word 0, 0, 0, 0, 0, 0, 0, 0
+      .word 0, 0, 0, 0, 0, 0, 0, 0
+      .word 0, 0, 0, 0, 0, 0, 0, 0
+
+Player: .word 1
+Steps: .word 2
