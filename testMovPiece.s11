@@ -1,10 +1,10 @@
 .=torg+1000
 main:
      mov #main, sp ; setting the stack
-     mov #board, -(sp) ; pushing #board to stack
+     mov #Board, -(sp) ; pushing #board to stack
      jsr r5, movPiece
-     .word 10
-     .word 17
+     .word 10. ; Source index.
+     .word 24. ; Destanation index.
      halt
 
 
@@ -34,23 +34,30 @@ movPiece:
 
          ; Now we need to check if there was an eat. We will find the address
          ; in the middle between the source address and the dest address.
-         ; Notice that if there was an eat then the address of the middle cell
-         ; is a multiply of 2 and it is: (src_addr + dest_addr)/2 . In that case
-         ; we also need to put 0 in that place.
+         ; Notice that if there was an eat then the address of the eaten cell
+         ; is a multiply of 2 and is equal to: (src_addr + dest_addr)/2 .
+		     ; In that case we also need to put 0 in that place.
          ; If there was no eat then the address of the middle cell is not a
          ; multiply of 2 and so we need to finish the function.
          mov r0, -(sp) ; Backing up r0.
-         mov (r1), (r0) ; r0 = address of source position.
-         add (r3), (r0) ; r0 = r0 + address of dest position.
-         div #2, (r0) ; r1 will hold the remainer. r0 will hold the middle addr.
-         cmp (r1), 0 ;
+		     clr r0
+         add r3, r1 ; r1 = source address + dest address
+         div #2, r0  ; r0 will hold the address of the eaten cell in case of eat.
+		     mov r0, -(sp) ; Backing up the address of the eaten cell.
+         ; Now we have the potenitally eaten cell address. we need to check if
+         ; that eaten cell address is a multiply of 2.
+		     clr r0
+		     mov (sp), r1 ; r1 = eaten cell address.
+	    	 div #2, r0 ; r1 will hold the remainer.
+         cmp r1, 0 ;
          bne endmop ; if the remainer is not zero there was no eat. goto endmop.
          ; If we got here then the remainer is zero. it means that there was an
          ; eat and we need to put 0 in the eaten place.
-         ; Notice that the eaten place is at r0.
-         mov 0, (r0)
+         ; Notice that the eaten cell address is at sp.
+         mov 0, @(sp)
          ; Method is done. Restoring registers.
          endmop:
+				tst (sp)+ ; popping the eaten cell address (no longer needed).
                 mov (sp)+, r0 ; Restoring value of r0.
                 mov (sp)+, r3 ; Restoring value of r4.
                 mov (sp)+, r1 ; Restoring value of r3.
@@ -60,8 +67,8 @@ movPiece:
 
 Board:
       .word 0, 0, 0, 0, 0, 0, 0, 0
-      .word 1, 0, 0, 0, 0, 0, 0, 0
-      .word 0, 0, 0, 0, 0, 0, 0, 0
+      .word 0, 0, 1, 0, 0, 0, 0, 0
+      .word 0, 2, 0, 0, 0, 0, 0, 0
       .word 0, 0, 0, 0, 0, 0, 0, 0
       .word 0, 0, 0, 0, 0, 0, 0, 0
       .word 0, 0, 0, 0, 0, 0, 0, 0
