@@ -17,13 +17,13 @@ countWB:
         mov r3, -(sp) ; Backing up r3. r3 will store the end of the board.
         clr r1
         clr r2
-        mov 10(sp), r0 ; r0 = beginning of the board.
+        mov 10.(sp), r0 ; r0 = beginning of the board.
         mov r0, r3 ; r3 = beginning of the board.
-        add 176, r3 ; r3 = end of the board.
+        add #176, r3 ; r3 = end of the board.
         cntloop:
                 tst (r0) ;
                 beq endloop ; if (r0) is 0 then no player in this cell.
-                cmp (r0), 1
+                cmp (r0), #1
                 bne addBLK
                 inc r1 ; Current cell is white. r1++ .
                 br endloop ; Go to next cell.
@@ -36,8 +36,8 @@ countWB:
              cmp r0,r3
              ble cntloop ; if we are still in the board limits - go to cntloop.
              ; If we got here we finished going through the entire board.
-             mov r1, 14(sp) ; Writing white counter to stack.
-             mov r2, 12(sp) ; Writing black counter to stack.
+             mov r1, 14.(sp) ; Writing white counter to stack.
+             mov r2, 12.(sp) ; Writing black counter to stack.
              mov (sp)+, r3 ; Restoring the value of r3.
              mov (sp)+, r2 ; Restoring the value of r2.
              mov (sp)+, r1 ; Restoring the value of r1.
