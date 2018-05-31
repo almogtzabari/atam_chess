@@ -1,0 +1,73 @@
+; This method will count how many vessles from each color are there on the
+; given board.
+;
+; Input:
+; Label of the beginning of the board - will be stored at 2(sp).
+;
+; Output:
+; Number of white vessels - after rts will be stored at 4(sp).
+; Number of black vessels - after rts will be stored at 2(sp).
+;
+; Notice: after rts 0(sp) will store the label of the board which is usually no
+; longer needed.
+
+.=torg+1000
+main:
+  mov #main, sp
+  mov #0, -(sp)
+  mov #0, -(sp)
+  mov #Board, -(sp)
+  jsr pc, countWB
+  tst (sp)+
+  clr r0
+  clr r1
+  mov (sp)+, r0
+  mov (sp), r1
+  halt
+
+countWB:
+        mov r0, -(sp) ; Backing up r0. r0 will be used to scan the board.
+        mov r1, -(sp) ; Backing up r1. r1 will be used to count white vessels.
+        mov r2, -(sp) ; Backing up r2. r2 will be used to count black vessels.
+        mov r3, -(sp) ; Backing up r3. r3 will store the end of the board.
+        clr r1
+        clr r2
+        mov 10.(sp), r0 ; r0 = beginning of the board.
+        mov r0, r3 ; r3 = beginning of the board.
+        add #176, r3 ; r3 = end of the board.
+        cntloop:
+                tst (r0) ;
+                beq endloop ; if (r0) is 0 then no player in this cell.
+                cmp (r0), #1
+                bne addBLK
+                inc r1 ; Current cell is white. r1++ .
+                br endloop ; Go to next cell.
+        addBLK:
+                inc r2 ; Current cell is black. r2++ .
+                br endloop ; Go to next cell.
+
+     endloop:
+             add #2, r0 ; r0 will point to next cell in the board.
+             cmp r0,r3
+             ble cntloop ; if we are still in the board limits - go to cntloop.
+             ; If we got here we finished going through the entire board.
+             mov r1, 14.(sp) ; Writing white counter to stack.
+             mov r2, 12.(sp) ; Writing black counter to stack.
+             mov (sp)+, r3 ; Restoring the value of r3.
+             mov (sp)+, r2 ; Restoring the value of r2.
+             mov (sp)+, r1 ; Restoring the value of r1.
+             mov (sp)+, r0 ; Restoring the value of r0.
+             rts pc
+   .=torg+5000
+
+             Board:
+                   .word 0, 0, 0, 2, 0, 0, 0, 2
+                   .word 0, 0, 0, 0, 0, 0, 0, 0
+                   .word 0, 0, 0, 0, 0, 0, 0, 0
+                   .word 0, 0, 0, 0, 2, 0, 0, 0
+                   .word 0, 0, 0, 0, 0, 0, 0, 0
+                   .word 0, 0, 0, 0, 0, 0, 0, 0
+                   .word 0, 0, 0, 0, 0, 0, 0, 0
+                   .word 0, 0, 1, 1, 0, 0, 0, 1
+
+             Player: .word 1

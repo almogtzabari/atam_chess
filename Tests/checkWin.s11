@@ -1,0 +1,348 @@
+.=torg+1000
+main:
+  mov #main, sp
+  mov #Board, -(sp)
+  mov Player, -(sp)
+  tst -(sp)
+  jsr pc, checkWin
+  clr r1
+  mov (sp)+, r1
+  halt
+
+
+
+
+
+
+;Checks if a given board is in a winning state for the given player.
+checkWin:
+tst -(sp) ; Allocating place for number of white pieces.
+tst -(sp) ; Allocating place for number of black pieces.
+mov 12(sp), -(sp) ; Copying board adress to the top of the stack.
+jsr pc, countWB
+tst (sp)+ ; Pop board adress.
+cmp 10(sp), #1 ; Check if the current player is white.
+bne checkb ; Branch to checkb if the current player is black.
+tst (sp) ; Current player is white, checks the number of black pieces.
+beq currWin ; If the number of black pieces is 0 white player wins.
+tst 2(sp) ; Checks the number of white pieces.
+beq noWin ; Current player is white and the number of white pieces is 0, white player loses.
+br not0 ; Both player's number of pieces is not 0.
+
+checkb: ; The current player is black.
+tst 2(sp) ; Checks if the number of white pieces is 0.
+beq currWin ; Black player wins.
+tst (sp) ; Checks if the number of black pieces is 0.
+beq noWin ; Current player is black and the number of black pieces is 0.
+
+not0: ; We get here if the number of both player's pieces is not 0.
+mov #1, -(sp) ; Moving number of white player to check number of moves for him.
+mov #0, -(sp) ; Allocating place for number of moves and setting it to 0.
+; Checking if there is legal moves for the given player.
+jsr pc, moveChk ; Number of legal moves for white player will be at the top of the stack.
+tst (sp) ; Checks if white player has legal moves to make.
+bne hasMoves ; There are still moves to make.
+mov #2, 2(sp) ; Moving number of black player to check number of moves for him.
+jsr pc, moveChk ; Number of legal moves for black player will be at the top of the stack.
+tst (sp) ; Checks if both players has legal moves to make.
+bne hasMoves ; One of the players still has moves to make.
+tst (sp)+ ; Pops number of player's moves.
+tst (sp)+ ; Pops player number.
+cmp #1, 10(sp) ; Checks if the player is the white player.
+bne blackChk ; The player is the black player.
+cmp 2(sp), (sp) ; Checks if number of white pieces is bigger than number of black pieces.
+bgt currWin ; If the number of white pieces is bigger, white player wins.
+br noWin ; If we got here the number of white pieces is not bigger.
+blackChk: ; The current player color is black.
+cmp (sp), 2(sp) ; Checks if number of black pieces is bigger than number of white pieces.
+bgt currWin ; Black player wins.
+br noWin ; Black player lost.
+
+currWin: ; The current player wins.
+tst (sp)+ ; Pop number of black pieces.
+tst (sp)+ ; Pop number of white pieces.
+mov #1, 2(sp) ; The return value will be 1.
+rts pc
+
+hasMoves: ; One of the players still has legal moves.
+tst (sp)+ ; Pops number of moves.
+tst (sp)+ ; Pops the number of player.
+noWin: ; The current player is not winning.
+tst (sp)+ ; Pop number of black pieces.
+tst (sp)+ ; Pop number of white pieces.
+mov #-1., 2(sp)
+rts pc
+
+
+
+;This subroutine checks the number of moves for  a given player.
+;Input:
+; - A number of player to check, will be at 2(sp).
+; - A number of moves to add to, will be at (sp).
+moveChk:
+; r0 - Current row index.
+; r1 - Current column index.
+mov r0, -(sp) ; Saving r0's value on stack.
+mov r1, -(sp) ; Saving r1's value on stack.
+mov r2, -(sp) ; Saving r2's value on stack
+mov r3, -(sp) ; Saving r3's value on stack
+mov r5, -(sp); Saving r5's value on stack
+clr r0 ; Sets r0 to 0.
+clr r1 ; Sets r1 to 0.
+cmp 14.(sp), #1 ; Checking if the current color is white.
+bne Black ; If the color is not white, branch to Black.
+br White ; If the color is white, branch to White.
+
+
+
+White:
+; This method will check legal moves of all white pieces and add 1 to NumMoves each time a legal move is found.
+; r2- current cell pointer.
+; r3 - temporary row index (will be used once for another calculation).
+; r5 - temporary column index (will be used once for another calculation).
+
+mov r0, r3  ; Putting index of the current row in r3.
+mov r1, r5  ; Putting index of the current column in r5.
+mov #Board, r2 ; Putting board array starting index in r2.
+mul #16., r3 ; Multiplying the number of row by 16 (decimal) (length of each row in bits).
+mul #2, r5 ; Multiplying the number of column by 2 (decimal) (length of each column in bits).
+add r3, r2 ; Adding the number of bits needed in order to point to a start of a row.
+add r5, r2 ; Adding the number of bits needed in order to point a cell in a row.
+; r2 will now contain the address of the current cell.
+cmp (r2), #1 ; Checking if the current piece is white.
+bne skipcell ; If the color of the current piece is not white skip to the next cell.
+mov r0, r3 ; Setting r3 to the current row index (after changing it earlier).
+sub #1, r3 ; Reducing row index by 1.
+cmp r3, #0
+blt skipcell ; If row index is less than 0, cannot move left or right, skip to the next cell.
+mov r1, r5 ; Setting r5 to the current column index (after changing it eariler).
+add #1, r5 ; Increasing column index by 1.
+cmp r5, #7
+bgt LeftW ; If column index is bigger than 7, the current piece cannot move right, check legal moves to the left.
+cmp -14.(r2), #1 ; Checking if the upper right piece is white.
+beq LeftW ; If the upper right piece is white, cannot go there, check legal moves to the left.
+cmp -14.(r2), #2 ; Checking if the upper right piece is black.
+beq eatrw ; If the upper right piece is black, check if the white piece can eat it.
+add #1, 12.(sp) ; If we got here the upper right cell contains 0, the white piece can move there. Adding 1 to number of legal moves.
+br End ;Found a legal move.
+
+
+eatrw:
+;This method will check an eating option the right of white pieces.
+; r2- current cell pointer.
+; r3 - temporary row index .
+; r5 - temporary column index.
+
+sub #1, r3 ; Reducing row index by 1.
+cmp r3, #0
+blt LeftW ; If r3 is less than 0, cannot eat (out of bounds). Check legal moves to the left.
+add #1, r5 ;Increasing column index by 1.
+cmp r5, #7
+bgt LeftW ; If column index is bigger than 7, cannot eat (out of bounds). Check legal moves to the left.
+;If we got here, the cell which the current white piece should be placed after eating is in the board bounds, we need to check if it is empty.
+cmp -28.(r2), #0 ; Checking if the cell is empty.
+bne LeftW ; If the cell is not empty, cannot eat. Check legal moves to the left.
+add #1, 12.(sp) ;If we got here, can eat, adding 1 to number of legal moves.
+br End ;Found a legal move.
+
+
+LeftW:
+ ; This method will check legal moves to the left of white pieces.
+ ; r2- current cell pointer.
+ ; r3 - temporary row index .
+ ; r5 - temporary column index.
+
+mov r0, r3 ; Putting index of the current row in r3.
+sub #1, r3 ; Reducing row index by 1.
+mov r1, r5 ; Putting index of the current column in r5.
+sub #1, r5 ; Reducing column index by 1.
+cmp r5, #0
+blt skipcell ; If column index is less than 0, cannot move right, skip to the next cell.
+cmp -18.(r2), #1 ; Checking if the upper left piece is white.
+beq skipcell ; If the upper left piece is white, cannot move there, skip to the next cell.
+cmp -18.(r2), #2 ; Checking if the upper left piece is black.
+beq eatlw ; If the upper left piece is black, Check if the white piece can eat it.
+add #1, 12.(sp) ; If we got here, upper left cell contains 0, can move there. Adding 1 to number of legal moves..
+br End ;Found a legal move.
+
+eatlw:
+;This method will check an eating option the left of white pieces.
+; r2- current cell pointer.
+; r3 - temporary row index .
+; r5 - temporary column index.
+
+sub #1, r5 ; Reducing column index by 1.
+cmp r5, #0
+blt skipcell ; If column index is less than 0, cannot eat, skip to the next cell.
+sub #1, r3 ; Reducing row index by 1.
+cmp r3, #0
+blt skipcell ; If r3 is less than 0, cannot eat (out of bounds). Skip to the next cell.
+;If we got here, the cell which the current white piece should be placed after eating is in the board bounds, Check if it is empty.
+cmp -36.(r2), #0 ; Checking if the cell is empty.
+bne skipcell ;If the cell is not empty, cannot eat. Skip to the next cell.
+add #1, 12.(sp) ;If we got here, can eat, adding 1 to legal number of moves on the stack.
+br End ;Found a legal move.
+
+End: ;If we got here we checked all the cells of the array or we got a legal move.
+mov (sp)+, r5 ; Returning r5 it's original value.
+mov (sp)+, r3 ; Returning r3 it's original value.
+mov (sp)+, r2 ; Returning r2 it's original value.
+mov (sp)+, r1 ; Returning r1 it's original value.
+mov (sp)+, r0 ; Returning r0 it's original value.
+rts pc ; When we return from this subroutine the output will be at the top of the stack
+
+skipcell:
+; This method will skip to the next cell by adding 1 to column index. If column
+; index is bigger than 7 sets it to 0 and adds 1 to row index.
+; r0 - Current row index.
+; r1 - Current column index.
+
+add #1, r1
+cmp r1, #8 ; Checking if passed end of row.
+blt inRange ; Index of column is legal.
+clr r1 ; If we got here index of column passed end of row. Set it to 0.
+add #1, r0 ; Go to the next row.
+cmp r0, #7
+bgt End ; If index of row is bigger than 7 we reached the end of the board.
+
+inRange:
+;Continue on checking in the same row.
+cmp 14.(sp), #1
+bne Black
+br White
+
+
+Black:
+;This method will check legal moves of all black pieces and add 1 to NumMoves each time a legal move is found.
+; r2- current cell pointer.
+; r3 - temporary row index (will be used once for another calculation).
+; r5 - temporary column index (will be used once for another calculation).
+
+mov r0, r3  ; Putting index of the current row in r3.
+mov r1, r5  ; Putting index of the current column in r5.
+mov #Board, r2 ; Putting board array starting index in r2.
+mul #16., r3 ; Multiplying the number of row by 16 (decimal) (length of each row in bits).
+mul #2, r5 ; Multiplying the number of column by 2 (decimal) (length of each column in bits).
+add r3, r2 ;Adding the number of bits needed in order to point to a start of a row.
+add r5, r2 ; Adding the number of bits needed in order to point a cell in a row.
+; r2 will now contain the address of the current cell.
+cmp (r2), #2 ; Checking if the current piece is black.
+bne skipcell ; If the color of the current piece is not black skip to the next cell.
+mov r0, r3 ; Putting index of the current row in r3.
+add #1, r3 ; Increasing row index by 1.
+cmp r3, #7
+bgt skipcell ; If row index is bigger than 7, cannot move left, skip to the next cell.
+mov r1, r5 ; Setting r5 to the current column index (after changing it eariler).
+add #1, r5 ; Increasing column index by 1.
+cmp r5, #7
+bgt RightB ; If column index is bigger than 7, the current piece cannot move left, Check legal moves to the right.
+cmp 18.(r2), #2 ; Checking if the lower right piece is black.
+beq RightB ; If the lower right piece is black, cannot go there, Check legal moves to the right.
+cmp 18.(r2), #1 ; Checking if the lower right piece is black.
+beq eatlb ; If the lower right piece is white, check if the black piece can eat it.
+add #1, 12.(sp) ; If we got here the lower right cell contains 0, the black piece can move there. Adding 1 to number of legal moves.
+br End ;Found a legal move.
+
+eatlb:
+;This method will check an eating option the left of black pieces.
+; r2- current cell pointer.
+; r3 - temporary row index .
+; r5 - temporary column index.
+
+add #1, r3 ; Increasing row index by 1.
+cmp r3, #7 ; If r3 is bigger than 7, cannot eat (out of bounds). Check legal moves to the right.
+bgt RightB
+add #1, r5 ;Increasing column index by 1.
+cmp r5, #7
+bgt RightB ; If column index is bigger than 7, cannot eat (out of bounds). Check legal moves to the right.
+;If we got here, the cell which the current black piece should be placed after eating is in the board bounds, we need to check if it is empty.
+cmp 36.(r2), #0 ; Checking if the cell is empty.
+bne RightB ; If the cell is not empty, cannot eat. Check legal moves to the right.
+add #1, 12.(sp) ;If we got here, can eat. Adding 1 to number of legal moves.
+br End ;Found a legal move.
+
+RightB:
+; This method will check legal moves to the right of black pieces.
+; r2- current cell pointer.
+; r3 - temporary row index .
+; r5 - temporary column index.
+
+mov r0, r3 ; Putting index of the current row in r3.
+add #1, r3 ; Increasing row index by 1.
+mov r1, r5 ; Putting index of the current column in r5.
+sub #1, r5 ; Decreasing column index by 1.
+cmp r5, #0
+blt skipcell ; If column index is less than 0, cannot move right, skip to the next cell.
+cmp 14.(r2), #2 ; Checking if the lower left piece is black.
+beq skipcell ; If the lower left piece is white, cannot move there, skip to the next cell.
+cmp 14.(r2), #1 ; Checking if the lower left piece is white.
+beq eatrb ; If the lower left piece is white, check if the black piece can eat it.
+add #1, 12.(sp) ; If we got here the lower left cell contains 0, the black piece can move there. Adding 1 to number of legal moves.
+br End ;Found a legal move.
+
+
+eatrb:
+; This method will check an eating option the right of black pieces.
+; r2- current cell pointer.
+; r3 - temporary row index .
+; r5 - temporary column index.
+
+sub #1, r5 ; Reducing column index by 1.
+cmp r5, #0
+blt skipcell ; If column index is less than 0, cannot eat, skip to the next cell.
+add #1, r3 ; Increasing row index by 1.
+cmp r3, #7
+bgt skipcell ; If r3 is bigger than 7, cannot eat (out of bounds). Skip to the next cell.
+;If we got here, the cell which the current white piece should be placed after eating is in the board bounds, Check if it is empty.
+cmp 28.(r2), #0 ; Checking if the cell is empty.
+bne skipcell ;If the cell is not empty, cannot eat. Skip to the next cell.
+add #1, 12.(sp) ;If we got here, can eat. Adding 1 to number of legal moves.
+br End ;Found a legal move.
+
+countWB:
+        mov r0, -(sp) ; Backing up r0. r0 will be used to scan the board.
+        mov r1, -(sp) ; Backing up r1. r1 will be used to count white vessels.
+        mov r2, -(sp) ; Backing up r2. r2 will be used to count black vessels.
+        mov r3, -(sp) ; Backing up r3. r3 will store the end of the board.
+        clr r1
+        clr r2
+        mov 10.(sp), r0 ; r0 = beginning of the board.
+        mov r0, r3 ; r3 = beginning of the board.
+        add #176, r3 ; r3 = end of the board.
+        cntloop:
+                tst (r0) ;
+                beq endloop ; if (r0) is 0 then no player in this cell.
+                cmp (r0), #1
+                bne addBLK
+                inc r1 ; Current cell is white. r1++ .
+                br endloop ; Go to next cell.
+        addBLK:
+                inc r2 ; Current cell is black. r2++ .
+                br endloop ; Go to next cell.
+
+     endloop:
+             add #2, r0 ; r0 will point to next cell in the board.
+             cmp r0,r3
+             ble cntloop ; if we are still in the board limits - go to cntloop.
+             ; If we got here we finished going through the entire board.
+             mov r1, 14.(sp) ; Writing white counter to stack.
+             mov r2, 12.(sp) ; Writing black counter to stack.
+             mov (sp)+, r3 ; Restoring the value of r3.
+             mov (sp)+, r2 ; Restoring the value of r2.
+             mov (sp)+, r1 ; Restoring the value of r1.
+             mov (sp)+, r0 ; Restoring the value of r0.
+             rts pc
+
+.=torg+5000
+
+Board:
+      .word 0, 0, 1, 1, 1, 0, 0, 0
+      .word 0, 0, 0, 0, 0, 0, 0, 0
+      .word 0, 0, 0, 0, 0, 0, 0, 0
+      .word 0, 0, 0, 0, 0, 0, 0, 0
+      .word 0, 2, 0, 2, 0, 2, 0, 2
+      .word 2, 0, 2, 0, 2, 0, 2, 0
+      .word 0, 1, 0, 1, 0, 1, 0, 1
+      .word 2, 0, 2, 2, 2, 2, 2, 0
+
+Player: .word 2
