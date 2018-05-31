@@ -15,10 +15,10 @@ countWB:
         mov r1, -(sp) ; Backing up r1. r1 will be used to count white vessels.
         mov r2, -(sp) ; Backing up r2. r2 will be used to count black vessels.
         mov r3, -(sp) ; Backing up r3. r3 will store the end of the board.
-        clr r0
         clr r1
         clr r2
-        mov 10(sp), r3 ; r3 = #board.
+        mov 10(sp), r0 ; r0 = beginning of the board.
+        mov r0, r3 ; r3 = beginning of the board.
         add 176, r3 ; r3 = end of the board.
         cntloop:
                 tst (r0) ;
