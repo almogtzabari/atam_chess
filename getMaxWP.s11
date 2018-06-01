@@ -35,6 +35,7 @@ White:
       beq LeftW ; If the upper right piece is white, cannot go there, check legal moves to the left.
       cmp -14.(r2), #2 ; Checking if the upper right piece is black.
       beq EatRW ; If the upper right piece is black, check if the white piece can eat it.
+      ; --- White Steps to the right ---
       add #1, NumMoves ; If we got here the upper right cell contains 0, the white piece can move there. Adding 1 to NumMoves.
       br LeftW ; Keep on checking legal moves to the left (cannot eat so we don't need to check an eating option).
 
@@ -53,6 +54,7 @@ White:
             ;If we got here, the cell which the current white piece should be placed after eating is in the board bounds, we need to check if it is empty.
             cmp -28.(r2), #0 ; Checking if the cell is empty.
             bne LeftW ; If the cell is not empty, cannot eat. Check legal moves to the left.
+            ; --- White eat to the right ---
             add #1, NumMoves ;If we got here, can eat, adding 1 to NumMoves.
 
 
@@ -71,6 +73,7 @@ White:
             beq NextCell ; If the upper left piece is white, cannot move there, skip to the next cell.
             cmp -18.(r2), #2 ; Checking if the upper left piece is black.
             beq EatLW ; If the upper left piece is black, Check if the white piece can eat it.
+            ; --- White steps to the left ---
             add #1, NumMoves ; If we got here, upper left cell contains 0, can move there. Adding 1 to NumMoves.
             br NextCell ; Skip to the next cell (cannot eat so we don't need to check an eating option).
 
@@ -90,6 +93,7 @@ White:
             ;placed in after eating is in the board bounds, Check if it is empty.
             cmp -36.(r2), #0 ; Checking if the cell is empty.
             bne NextCell ;If the cell is not empty, cannot eat. Skip to the next cell.
+            ; --- White eat to the left ---
             add #1, NumMoves ;If we got here, can eat, adding 1 to NumMoves.
             br NextCell ; No more moving options, move to the next cell.
 
@@ -146,6 +150,7 @@ Black:
       beq RightB ; If the lower left piece is black, cannot go there, Check legal moves to the right.
       cmp 18.(r2), #1 ; Checking if the lower right piece is black.
       beq EatLB ; If the lower right piece is white, check if the black piece can eat it.
+      ; --- Black steps to the left ---
       add #1, NumMoves ; If we got here the lower right cell contains 0, the black piece can move there. Adding 1 to NumMoves.
       br RightB ; Keep on checking legal moves to the right (cannot eat so we don't need to check an eating option).
 
@@ -164,6 +169,7 @@ Black:
             ;If we got here, the cell which the current black piece should be placed after eating is in the board bounds, we need to check if it is empty.
             cmp 36.(r2), #0 ; Checking if the cell is empty.
             bne RightB ; If the cell is not empty, cannot eat. Check legal moves to the right.
+            ; --- Black eat to the left ---
             add #1, NumMoves ;If we got here, can eat, adding 1 to NumMoves.
 
 
@@ -182,6 +188,7 @@ Black:
              beq NextCell ; If the lower left piece is white, cannot move there, skip to the next cell.
              cmp 14.(r2), #1 ; Checking if the lower left piece is white.
              beq EatRB ; If the lower left piece is white, check if the black piece can eat it.
+             ; --- Black steps to the right ---
              add #1, NumMoves ; If we got here the lower left cell contains 0, the black piece can move there. Adding 1 to NumMoves.
              br NextCell ;Skip to the next cell (cannot eat so we don't need to check an eating option).
 
@@ -200,6 +207,7 @@ Black:
             ;If we got here, the cell which the current white piece should be placed after eating is in the board bounds, Check if it is empty.
             cmp 28.(r2), #0 ; Checking if the cell is empty.
             bne NextCell ;If the cell is not empty, cannot eat. Skip to the next cell.
+            ; --- Black eat to the right ---
             add #1, NumMoves ;If we got here, can eat, adding 1 to NumMoves.
             br NextCell ; No more moving options, move to the next cell.
 
