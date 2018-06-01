@@ -1,11 +1,59 @@
-; r0 - Current row index.
-; r1 - Current column index.
-main:
-      clr r0 ; Sets r0 to 0.
-      clr r1 ; Sets r1 to 0.
-      cmp Player, #1 ; Checking if the current color is white.
-      bne Black ; If the color is not white, branch to Black.
-      br White ; If the color is white, branch to White.
+
+
+
+getMaxWP:
+  tst -(sp) ; Allocating source position.
+  mov #DstPos, -(sp) ; Allocating destenation position.
+  mov #WinParam, -(sp) ; Moving win parameter to the stack.
+  tst -(sp) ; Allocating place for WP.
+  mov Player, -(sp) ; Moving the player we check for to the stack.
+  mov Steps, -(sp) ; Moving number of steps to stack.
+  jsr pc, getWPRec
+
+
+getWPRec:
+ mov #Board, -(sp) ; Moving board adress to stack.
+ mov 10(sp), -(sp) ; Moving current player to the top of the stack.
+ mov r0, -(sp) ; Backing up r0.
+ mov #3, r0
+ sub 2(sp), r0 ; Substract number of player from 3 will give us the other player.
+ mov r0, 2(sp) ; 2(sp) will now be the current player and the value of (sp) will be used by checkWin.
+ mov (sp), r0 ; Restoring r0's value.
+ jsr pc, checkWin ; CheckWin will use the place allocted for r0 in the stack for output.
+ cmp #1, (sp)+ ; Pop the return value of checkWin and check which player won.
+ beq whoWon
+ add #4, (sp) ; Pop the other player from the stack.
+ tst 4(sp) ; Check if the current number of steps is 0.
+ bne chkMoves
+ mov r4 -(sp) ; Backing up r4.
+ mov #Board, -(sp) ; Moving board adress to stack.
+ mov 10.(sp), -(sp) ; Moving current player to the top of the stack (calcWP will give us the points for the second player - not the one passed).
+ jsr pc, calcWP
+ mov r4, 10(sp); Moving the wp to tempWP in the stack.
+ add #4, sp
+ mov (sp)+, r4 ; Restoring r4's value.
+ rts pc
+
+ whoWon:
+   cmp (sp)+, Player ; Check if the current player is the same as found in label Player.
+   bne playerLos
+   mov #20., 6(sp)
+   add #4, sp
+   rts pc
+   playerLos:
+     mov #-20., 6(sp)
+     add #4, sp
+     rts pc
+
+     ; r0 - Current row index.
+     ; r1 - Current column index.
+     chkMoves:
+           clr r0 ; Sets r0 to 0.
+           clr r1 ; Sets r1 to 0.
+           cmp 6(sp), #1 ; Checking if the current color is white.
+           bne Black ; If the color is not white, branch to Black.
+           br White ; If the color is white, branch to White.
+
 
 
 ; This method will check legal moves of all white pieces and add 1 to NumMoves each time a legal move is found.
@@ -35,8 +83,42 @@ White:
       beq LeftW ; If the upper right piece is white, cannot go there, check legal moves to the left.
       cmp -14.(r2), #2 ; Checking if the upper right piece is black.
       beq EatRW ; If the upper right piece is black, check if the white piece can eat it.
-      ; --- White Steps to the right ---
-      add #1, NumMoves ; If we got here the upper right cell contains 0, the white piece can move there. Adding 1 to NumMoves.
+      mov #1, -14.(r2) ; Moving white piece to the new place.
+      mov #0, (r2) ; Removing white piece from the last place it was.
+      mov r0, -(sp) ; Backing up r0.
+      mov r1, -(sp) ; Backing up r1.
+      mov r2, -(sp) ; Backing up r2.
+      mov r3, -(sp) ; Backing up r3.
+      mov r5, -(sp) ; Backing up r5.
+      mov 22.(sp), -(sp) ; Moving SrcPos label address.
+      mov 22.(sp), -(sp) ; Moving DstPos label address.
+      mov 22.(sp), -(sp) ; Moving Wp label address.
+      mov #3, -(sp)
+      sub 24.(sp), (sp) ; Chaning to the other player.
+      mov 22.(sp), -(sp) ; Backing up current steps.
+      sub #1, (sp) ; Substract 1 from number of steps.
+      mov 22.(sp), -(sp) ; Allocating a place for temp wp.
+      jsr pc, getWPRec
+      mov r4 -(sp) ; Backing up r4.
+      mov 30.(sp), -(sp) ; Changing to the other player.
+      mov #Player, -(sp) ; Moving checked player
+      jsr pc, minOrMax ;
+      add #4, sp ; Pop checked player and current player.
+      cmp r4, #1 ; Check if we need to look for maximum.
+      bne minimum
+
+
+
+
+
+
+
+
+
+
+
+
+
       br LeftW ; Keep on checking legal moves to the left (cannot eat so we don't need to check an eating option).
 
 
@@ -54,7 +136,6 @@ White:
             ;If we got here, the cell which the current white piece should be placed after eating is in the board bounds, we need to check if it is empty.
             cmp -28.(r2), #0 ; Checking if the cell is empty.
             bne LeftW ; If the cell is not empty, cannot eat. Check legal moves to the left.
-            ; --- White eat to the right ---
             add #1, NumMoves ;If we got here, can eat, adding 1 to NumMoves.
 
 
@@ -73,7 +154,6 @@ White:
             beq NextCell ; If the upper left piece is white, cannot move there, skip to the next cell.
             cmp -18.(r2), #2 ; Checking if the upper left piece is black.
             beq EatLW ; If the upper left piece is black, Check if the white piece can eat it.
-            ; --- White steps to the left ---
             add #1, NumMoves ; If we got here, upper left cell contains 0, can move there. Adding 1 to NumMoves.
             br NextCell ; Skip to the next cell (cannot eat so we don't need to check an eating option).
 
@@ -93,7 +173,6 @@ White:
             ;placed in after eating is in the board bounds, Check if it is empty.
             cmp -36.(r2), #0 ; Checking if the cell is empty.
             bne NextCell ;If the cell is not empty, cannot eat. Skip to the next cell.
-            ; --- White eat to the left ---
             add #1, NumMoves ;If we got here, can eat, adding 1 to NumMoves.
             br NextCell ; No more moving options, move to the next cell.
 
@@ -150,7 +229,6 @@ Black:
       beq RightB ; If the lower left piece is black, cannot go there, Check legal moves to the right.
       cmp 18.(r2), #1 ; Checking if the lower right piece is black.
       beq EatLB ; If the lower right piece is white, check if the black piece can eat it.
-      ; --- Black steps to the left ---
       add #1, NumMoves ; If we got here the lower right cell contains 0, the black piece can move there. Adding 1 to NumMoves.
       br RightB ; Keep on checking legal moves to the right (cannot eat so we don't need to check an eating option).
 
@@ -169,7 +247,6 @@ Black:
             ;If we got here, the cell which the current black piece should be placed after eating is in the board bounds, we need to check if it is empty.
             cmp 36.(r2), #0 ; Checking if the cell is empty.
             bne RightB ; If the cell is not empty, cannot eat. Check legal moves to the right.
-            ; --- Black eat to the left ---
             add #1, NumMoves ;If we got here, can eat, adding 1 to NumMoves.
 
 
@@ -188,7 +265,6 @@ Black:
              beq NextCell ; If the lower left piece is white, cannot move there, skip to the next cell.
              cmp 14.(r2), #1 ; Checking if the lower left piece is white.
              beq EatRB ; If the lower left piece is white, check if the black piece can eat it.
-             ; --- Black steps to the right ---
              add #1, NumMoves ; If we got here the lower left cell contains 0, the black piece can move there. Adding 1 to NumMoves.
              br NextCell ;Skip to the next cell (cannot eat so we don't need to check an eating option).
 
@@ -207,7 +283,6 @@ Black:
             ;If we got here, the cell which the current white piece should be placed after eating is in the board bounds, Check if it is empty.
             cmp 28.(r2), #0 ; Checking if the cell is empty.
             bne NextCell ;If the cell is not empty, cannot eat. Skip to the next cell.
-            ; --- Black eat to the right ---
             add #1, NumMoves ;If we got here, can eat, adding 1 to NumMoves.
             br NextCell ; No more moving options, move to the next cell.
 
