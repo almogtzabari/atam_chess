@@ -49,7 +49,7 @@ getWPRec:
  jsr pc, checkWin ; CheckWin will use the place allocted for r0 in the stack for output.
  cmp #1, (sp)+ ; Pop the return value of checkWin and check which player won.
  beq whoWon
- add #4, (sp) ; Pop the other player and board from the stack.
+ add #4, sp ; Pop the other player and board from the stack.
  tst 2(sp) ; Check if the current number of steps is 0.
  bne chkMoves
  ; We get here in case steps is 0.
@@ -191,7 +191,7 @@ White:
           br jLeftW0
 
         nUpdate0:
-          add #12., (sp) ; Popping all values besides registers backup.
+          add #12., sp ; Popping all values besides registers backup.
           mov (sp)+, r5
           mov (sp)+, r3
           mov (sp)+, r2
