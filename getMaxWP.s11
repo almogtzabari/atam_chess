@@ -17,18 +17,18 @@ getMaxWP:
   mov Steps, -(sp) ; Moving number of steps to stack.
   jsr pc, getWPRec
   add #6, sp
-  mov (sp)+, @8.(sp) ; Writing the best wp to WinParam label.
-  sub #5000, (sp) ;
+  mov (sp)+, @6.(sp) ; Writing the best wp to WinParam label.
+  sub #Board, (sp) ;
   mov r0, -(sp)
   mov r1, -(sp)
   clr r0
   mov 4(sp), r1
-  div #2, r1
+  div #2, r0
   mov r0, @12.(sp)
   clr r0
-  sub #5000, 6(sp)
+  sub #Board, 6(sp)
   mov 6(sp), r1
-  div #2, r1
+  div #2, r0
   mov r0, @14.(sp)
   mov (sp)+, r1
   mov (sp)+, r0
@@ -67,8 +67,8 @@ getWPRec:
    tst (sp)+
    rts pc
    playerLos:
-     mov #-20., 6(sp)
-     add #4, sp
+     mov #-20., 10.(sp)
+     tst (sp)+
      rts pc
 ; --- END OF STOP TERMS ---
 
@@ -100,436 +100,6 @@ getWPRec:
 ; r2- current cell address.
 ; r3 - temporary row index (will be used once for another calculation).
 ; r5 - temporary column index (will be used once for another calculation).
-White:
-      mov r0, r3  ; Putting index of the current row in r3.
-      mov r1, r5  ; Putting index of the current column in r5.
-      mov #Board, r2 ; Putting board array starting index in r2.
-      mul #16., r3 ; Multiplying the number of row by 16 (decimal) (length of each row in bytes).
-      mul #2, r5 ; Multiplying the number of column by 2 (decimal) (width of each column in bytes).
-      add r3, r2 ; Adding the number of bytes needed in order to point to the beginning of a row.
-      add r5, r2 ; Adding the number of bytes needed in order to point a cell in a row.
-      ; r2 will now contain the address of the current cell.
-      cmp (r2), #1 ; Checking if the current piece is white.
-      bne jNxtCll0 ; If the color of the current piece is not white skip to the next cell.
-      mov r0, r3 ; Setting r3 to the current row index (after changing it earlier).
-      sub #1, r3 ; Reducing row index by 1.
-      cmp r3, #0
-      blt jNxtCll0 ; If row index is less than 0, cannot move at all, skip to the next cell.
-      mov r1, r5 ; Setting r5 to the current column index (after changing it eariler).
-      add #1, r5 ; Increasing column index by 1.
-      cmp r5, #7
-      bgt jLeftW0 ; If column index is bigger than 7, the current piece cannot move right, check legal moves to the left.
-      cmp -14.(r2), #1 ; Checking if the upper right piece is white.
-      beq jLeftW0 ; If the upper right piece is white, cannot go there, check legal moves to the left.
-      cmp -14.(r2), #2 ; Checking if the upper right piece is black.
-      beq EatRW ; If the upper right piece is black, check if the white piece can eat it.
-
-      ; --- WHITE MOVE RIGHT ---
-      ; Making the move of the white player.
-      mov #1, -14.(r2) ; Moving white piece to the new place.
-      mov #0, (r2) ; Removing white piece from the last place it was.
-
-      ; Backing up registers before calling the REC function.
-      mov r0, -(sp) ; Backing up r0.
-      mov r1, -(sp) ; Backing up r1.
-      mov r2, -(sp) ; Backing up r2.
-      mov r3, -(sp) ; Backing up r3.
-      mov r5, -(sp) ; Backing up r5.
-
-      ; Preparing the arguments for the REC function.
-      mov #0, -(sp) ; Allocating source position.
-      mov #0, -(sp) ; Allocating destenation position.
-      cmp #1, 20(sp) ; Checking if minimum or maximum was checked in the last call.
-      beq chngMin0 ; Changing maximum to minimum.
-      mov #-100., -(sp) ; Miminum was checked in the last call.
-      mov #1, -(sp) ; Maximum will be checked.
-      br changed0
-
-      chngMin0: ; Changing maximum to minimum.
-      mov #100., -(sp) ; Maximum was checked in the last call.
-      mov #-1., -(sp) ; Minimum will be checked.
-
-      changed0: ; Changed maximum\minimum value.
-        mov #3, -(sp)
-        sub 24.(sp), (sp) ; Chaning to the other player.
-        mov 22.(sp), -(sp) ; Copying last number of steps.
-        sub #1, (sp) ; Substract 1 from number of steps.
-        jsr pc, getWPRec
-        cmp 28.(sp), #1 ; The father is looking for a maximum.
-        beq upMax0 ; Father was looking for a maximum.
-        ; Father was looking for a minimum.
-        cmp 6(sp), 30.(sp) ; Comparing wp to the wp of the father.
-        bgt nUpdate0
-        ;Updating father wp , src and dest.
-        mov 6(sp), 30.(sp) ; Updating father wp to new minimum.
-        add #12., sp ; Popping all values besides registers backup.
-        mov (sp)+, r5
-        mov (sp)+, r3
-        mov (sp)+, r2
-        mov (sp)+, r1
-        mov (sp)+, r0
-        mov #0, -14.(r2) ; Moving white piece to the previous place.
-        mov #1, (r2)
-        mov r2, 12.(sp) ; Updating father src.
-        mov -14.(r2), 10.(sp) ; Updating father dest.
-        br jLeftW0
-
-        upMax0:
-          cmp 6(sp), 30.(sp) ; Comparing wp to the wp of the father.
-          ble nUpdate0
-          mov 6(sp), 30.(sp) ; Updating father wp to new maximum.
-          add #12., sp ; Popping all values besides registers backup.
-          mov (sp)+, r5
-          mov (sp)+, r3
-          mov (sp)+, r2
-          mov (sp)+, r1
-          mov (sp)+, r0
-          mov #0, -14.(r2) ; Moving white piece to the previous place.
-          mov #1, (r2)
-          mov r2, 12.(sp) ; Updating father src.
-          mov -14.(r2), 10.(sp) ; Updating father dest.
-          br jLeftW0
-
-        nUpdate0:
-          add #12., sp ; Popping all values besides registers backup.
-          mov (sp)+, r5
-          mov (sp)+, r3
-          mov (sp)+, r2
-          mov (sp)+, r1
-          mov (sp)+, r0
-          mov #0, -14.(r2) ; Moving white piece to the previous place.
-          mov #1, (r2)
-          br jLeftW1 ; Keep on checking legal moves to the left (cannot eat so we don't need to check an eating option).
-
-          jLeftW1:
-            jmp LeftW
-
-      ;This method will check an eating option for white pieces to the right.
-      ; r2- current cell address.
-      ; r3 - temporary row index .
-      ; r5 - temporary column index.
-      EatRW:
-            sub #1, r3 ; Reducing row index by 1.
-            cmp r3, #0
-            blt jLeftW1 ; If r3 is less than 0, cannot eat (out of bounds). Check legal moves to the left.
-            add #1, r5 ;Increasing column index by 1.
-            cmp r5, #7
-            bgt jLeftW1 ; If column index is bigger than 7, cannot eat (out of bounds). Check legal moves to the left.
-            ;If we got here, the cell which the current white piece should be placed after eating is in the board bounds, we need to check if it is empty.
-            cmp -28.(r2), #0 ; Checking if the cell is empty.
-            bne jLeftW1 ; If the cell is not empty, cannot eat. Check legal moves to the left.
-
-            ; --- WHITE EAT RIGHT ---
-            ; Making the move of the white player.
-            mov #1, -28.(r2) ; Moving white piece to the new place.
-            mov #0, -14.(r2) ; Removing eaten piece.
-            mov #0, (r2) ; Removing white piece from the last place it was.
-
-            ; Backing up registers before calling the REC function.
-            mov r0, -(sp) ; Backing up r0.
-            mov r1, -(sp) ; Backing up r1.
-            mov r2, -(sp) ; Backing up r2.
-            mov r3, -(sp) ; Backing up r3.
-            mov r5, -(sp) ; Backing up r5.
-
-            ; Preparing the arguments for the REC function.
-            mov #0, -(sp) ; Allocating source position.
-            mov #0, -(sp) ; Allocating destenation position.
-            cmp #1, 20(sp) ; Checking if minimum or maximum was checked in the last call.
-            beq chngMin1 ; Changing maximum to minimum.
-            mov #-100., -(sp) ; Miminum was checked in the last call.
-            mov #1, -(sp) ; Maximum will be checked.
-            br changed1
-
-            chngMin1: ; Changing maximum to minimum.
-            mov #100., -(sp) ; Maximum was checked in the last call.
-            mov #-1., -(sp) ; Minimum will be checked.
-
-            changed1: ; Changed maximum\minimum value.
-              mov #3, -(sp)
-              sub 24.(sp), (sp) ; Chaning to the other player.
-              mov 22.(sp), -(sp) ; Copying last number of steps.
-              sub #1, (sp) ; Substract 1 from number of steps.
-              jsr pc, getWPRec
-              cmp 28.(sp), #1 ; The father is looking for a maximum.
-              beq upMax1 ; Father was looking for a maximum.
-              ; Father was looking for a minimum.
-              cmp 6(sp), 30.(sp) ; Comparing wp to the wp of the father.
-              bgt nUpdate1
-              ;Updating father wp , src and dest.
-              mov 6(sp), 30.(sp) ; Updating father wp to new minimum.
-              add #12., sp ; Popping all values besides registers backup.
-              mov (sp)+, r5
-              mov (sp)+, r3
-              mov (sp)+, r2
-              mov (sp)+, r1
-              mov (sp)+, r0
-              mov #0, -28.(r2) ; Moving white piece to the new place.
-              mov #2, -14.(r2) ; Removing eaten piece.
-              mov #1, (r2) ; Removing white piece from the last place it was.
-              mov r2, 12.(sp) ; Updating father src.
-              mov -28.(r2), 10.(sp) ; Updating father dest.
-              br jLeftW1
-
-
-              upMax1:
-                cmp 6(sp), 30.(sp) ; Comparing wp to the wp of the father.
-                ble nUpdate0
-                mov 6(sp), 30.(sp) ; Updating father wp to new maximum.
-                add #12., sp ; Popping all values besides registers backup.
-                mov (sp)+, r5
-                mov (sp)+, r3
-                mov (sp)+, r2
-                mov (sp)+, r1
-                mov (sp)+, r0
-                mov #0, -28.(r2) ; Moving white piece to the new place.
-                mov #2, -14.(r2) ; Removing eaten piece.
-                mov #1, (r2) ; Removing white piece from the last place it was.
-                mov r2, 12.(sp) ; Updating father src.
-                mov -28.(r2), 10.(sp) ; Updating father dest.
-                br jLeftW1
-
-              nUpdate1:
-                add #12., sp ; Popping all values besides registers backup.
-                mov (sp)+, r5
-                mov (sp)+, r3
-                mov (sp)+, r2
-                mov (sp)+, r1
-                mov (sp)+, r0
-                mov #0, -28.(r2) ; Moving white piece to the new place.
-                mov #2, -14.(r2) ; Removing eaten piece.
-                mov #1, (r2) ; Removing white piece from the last place it was.
-                br jLeftW2 ; Keep on checking legal moves to the left (cannot eat so we don't need to check an eating option).
-
-                jLeftW2:
-                  jmp LeftW
-
-
-
-      ; This method will check legal moves of white pieces to the left.
-      ; r2- current cell address.
-      ; r3 - temporary row index .
-      ; r5 - temporary column index.
-      LeftW:
-            mov r0, r3 ; Putting index of the current row in r3.
-            sub #1, r3 ; Reducing row index by 1.
-            mov r1, r5 ; Putting index of the current column in r5.
-            sub #1, r5 ; Reducing column index by 1.
-            cmp r5, #0
-            blt jNxtCll1 ; If column index is less than 0, cannot move right, skip to the next cell.
-            cmp -18.(r2), #1 ; Checking if the upper left piece is white.
-            beq jNxtCll1 ; If the upper left piece is white, cannot move there, skip to the next cell.
-            cmp -18.(r2), #2 ; Checking if the upper left piece is black.
-            beq EatLW ; If the upper left piece is black, Check if the white piece can eat it.
-
-            ; --- WHITE MOVE LEFT ---
-            ; Making the move of the white player.
-            mov #1, -18.(r2) ; Moving white piece to the new place.
-            mov #0, (r2) ; Removing white piece from the last place it was.
-
-            ; Backing up registers before calling the REC function.
-            mov r0, -(sp) ; Backing up r0.
-            mov r1, -(sp) ; Backing up r1.
-            mov r2, -(sp) ; Backing up r2.
-            mov r3, -(sp) ; Backing up r3.
-            mov r5, -(sp) ; Backing up r5.
-
-            ; Preparing the arguments for the REC function.
-            mov #0, -(sp) ; Allocating source position.
-            mov #0, -(sp) ; Allocating destenation position.
-            cmp #1, 20(sp) ; Checking if minimum or maximum was checked in the last call.
-            beq chngMin2 ; Changing maximum to minimum.
-            mov #-100., -(sp) ; Miminum was checked in the last call.
-            mov #1, -(sp) ; Maximum will be checked.
-            br changed2
-
-            chngMin2: ; Changing maximum to minimum.
-            mov #100., -(sp) ; Maximum was checked in the last call.
-            mov #-1., -(sp) ; Minimum will be checked.
-
-            changed2: ; Changed maximum\minimum value.
-              mov #3, -(sp)
-              sub 24.(sp), (sp) ; Chaning to the other player.
-              mov 22.(sp), -(sp) ; Copying last number of steps.
-              sub #1, (sp) ; Substract 1 from number of steps.
-              jsr pc, getWPRec
-              cmp 28.(sp), #1 ; The father is looking for a maximum.
-              beq upMax2 ; Father was looking for a maximum.
-              ; Father was looking for a minimum.
-              cmp 6(sp), 30.(sp) ; Comparing wp to the wp of the father.
-              bgt nUpdate2
-              ;Updating father wp , src and dest.
-              mov 6(sp), 30.(sp) ; Updating father wp to new minimum.
-              add #12., sp ; Popping all values besides registers backup.
-              mov (sp)+, r5
-              mov (sp)+, r3
-              mov (sp)+, r2
-              mov (sp)+, r1
-              mov (sp)+, r0
-              mov #0, -18.(r2) ; Moving white piece to the previous place.
-              mov #1, (r2)
-              mov r2, 12.(sp) ; Updating father src.
-              mov -18.(r2), 10.(sp) ; Updating father dest.
-              br jNxtCll1
-
-              jNxtCll1:
-                jmp NextCell
-
-              upMax2:
-                cmp 6(sp), 30.(sp) ; Comparing wp to the wp of the father.
-                ble nUpdate2
-                mov 6(sp), 30.(sp) ; Updating father wp to new maximum.
-                add #12., sp ; Popping all values besides registers backup.
-                mov (sp)+, r5
-                mov (sp)+, r3
-                mov (sp)+, r2
-                mov (sp)+, r1
-                mov (sp)+, r0
-                mov #0, -18.(r2) ; Moving white piece to the previous place.
-                mov #1, (r2)
-                mov r2, 12.(sp) ; Updating father src.
-                mov -18.(r2), 10.(sp) ; Updating father dest.
-                br jNxtCll1
-
-              nUpdate2:
-                add #12., sp ; Popping all values besides registers backup.
-                mov (sp)+, r5
-                mov (sp)+, r3
-                mov (sp)+, r2
-                mov (sp)+, r1
-                mov (sp)+, r0
-                mov #0, -18.(r2) ; Moving white piece to the previous place.
-                mov #1, (r2)
-                br jNxtCll1 ; Keep on checking legal moves to the left (cannot eat so we don't need to check an eating option).
-
-
-      ;This method will check an eating option for white pieces to the left.
-      ; r2- current cell address.
-      ; r3 - temporary row index .
-      ; r5 - temporary column index.
-      EatLW:
-            sub #1, r5 ; Reducing column index by 1.
-            cmp r5, #0
-            blt jNxtCll1 ; If column index is less than 0, cannot eat, skip to the next cell.
-            sub #1, r3 ; Reducing row index by 1.
-            cmp r3, #0
-            blt jNxtCll1 ; If r3 is less than 0, cannot eat (out of bounds). Skip to the next cell.
-            ;If we got here, the cell which the current white piece should be
-            ;placed in after eating is in the board bounds, Check if it is empty.
-            cmp -36.(r2), #0 ; Checking if the cell is empty.
-            bne jNxtCll1 ;If the cell is not empty, cannot eat. Skip to the next cell.
-
-            ; --- WHITE EAT LEFT ---
-            ; Making the move of the white player.
-            mov #1, -36.(r2) ; Moving white piece to the new place.
-            mov #0, -18.(r2) ; Removing eaten piece.
-            mov #0, (r2) ; Removing white piece from the last place it was.
-
-            ; Backing up registers before calling the REC function.
-            mov r0, -(sp) ; Backing up r0.
-            mov r1, -(sp) ; Backing up r1.
-            mov r2, -(sp) ; Backing up r2.
-            mov r3, -(sp) ; Backing up r3.
-            mov r5, -(sp) ; Backing up r5.
-
-            ; Preparing the arguments for the REC function.
-            mov #0, -(sp) ; Allocating source position.
-            mov #0, -(sp) ; Allocating destenation position.
-            cmp #1, 20(sp) ; Checking if minimum or maximum was checked in the last call.
-            beq chngMin3 ; Changing maximum to minimum.
-            mov #-100., -(sp) ; Miminum was checked in the last call.
-            mov #1, -(sp) ; Maximum will be checked.
-            br changed3
-
-            chngMin3: ; Changing maximum to minimum.
-            mov #100., -(sp) ; Maximum was checked in the last call.
-            mov #-1., -(sp) ; Minimum will be checked.
-
-            changed3: ; Changed maximum\minimum value.
-              mov #3, -(sp)
-              sub 24.(sp), (sp) ; Chaning to the other player.
-              mov 22.(sp), -(sp) ; Copying last number of steps.
-              sub #1, (sp) ; Substract 1 from number of steps.
-              jsr pc, getWPRec
-              cmp 28.(sp), #1 ; The father is looking for a maximum.
-              beq upMax3 ; Father was looking for a maximum.
-              ; Father was looking for a minimum.
-              cmp 6(sp), 30.(sp) ; Comparing wp to the wp of the father.
-              bgt nUpdate3
-              ;Updating father wp , src and dest.
-              mov 6(sp), 30.(sp) ; Updating father wp to new minimum.
-              add #12., sp ; Popping all values besides registers backup.
-              mov (sp)+, r5
-              mov (sp)+, r3
-              mov (sp)+, r2
-              mov (sp)+, r1
-              mov (sp)+, r0
-              mov #0, -36.(r2) ; Moving white piece to the previous place.
-              mov #2, -18.(r2)
-              mov #1, (r2)
-              mov r2, 12.(sp) ; Updating father src.
-              mov -36.(r2), 10.(sp) ; Updating father dest.
-              br jNxtCll1
-
-              upMax3:
-                cmp 6(sp), 30.(sp) ; Comparing wp to the wp of the father.
-                ble nUpdate3
-                mov 6(sp), 30.(sp) ; Updating father wp to new maximum.
-                add #12., sp ; Popping all values besides registers backup.
-                mov (sp)+, r5
-                mov (sp)+, r3
-                mov (sp)+, r2
-                mov (sp)+, r1
-                mov (sp)+, r0
-                mov #0, -36.(r2) ; Moving white piece to the previous place.
-                mov #2, -18.(r2)
-                mov #1, (r2)
-                mov r2, 12.(sp) ; Updating father src.
-                mov -36.(r2), 10.(sp) ; Updating father dest.
-                br jNxtCll2
-
-                jNxtCll2:
-                  jmp NextCell
-
-              nUpdate3:
-                add #12., sp ; Popping all values besides registers backup.
-                mov (sp)+, r5
-                mov (sp)+, r3
-                mov (sp)+, r2
-                mov (sp)+, r1
-                mov (sp)+, r0
-                mov #0, -36.(r2) ; Moving white piece to the previous place.
-                mov #2, -18.(r2)
-                mov #1, (r2)
-                br jNxtCll2 ; Keep on checking legal moves to the left (cannot eat so we don't need to check an eating option).
-
-
-            End: ;If we got here we checked all the cells of the array.
-            rts pc
-
-
-            ; This method will skip to the next cell by adding 1 to column index. If column
-            ; index is bigger than 7 sets it to 0 and adds 1 to row index.
-            ; r0 - Current row index.
-            ; r1 - Current column index.
-            NextCell:
-                     add #1, r1 ; Increasing column index by 1.
-                     cmp r1, #8 ; Checking if reached the end of the row.
-                     blt InRange ; Branch to InRange if the index of column is legal.
-                     clr r1 ; If we got here index of column reached the end of row. Sets it to 0.
-                     add #1, r0 ; Go to the next row.
-                     cmp r0, #7
-                     bgt End ; If index of row is bigger than 7 we reached the end of the board.
-
-                     ;Continues to the next cell once its indexes are valid.
-                     InRange:
-                             cmp 4(sp), #1
-                             bne Black
-                             br jWhite1
-
-                     jWhite1:
-                       jmp White
-
 jRightB:
   jmp RightB
 
@@ -579,7 +149,7 @@ Black:
       ; Preparing the arguments for the REC function.
       mov #0, -(sp) ; Allocating source position.
       mov #0, -(sp) ; Allocating destenation position.
-      cmp #1, 20(sp) ; Checking if minimum or maximum was checked in the last call.
+      cmp #1, 20.(sp) ; Checking if minimum or maximum was checked in the last call.
       beq chngMin4 ; Changing maximum to minimum.
       mov #-100., -(sp) ; Miminum was checked in the last call.
       mov #1, -(sp) ; Maximum will be checked.
@@ -610,7 +180,8 @@ Black:
         mov #0, 18.(r2)
         mov #2, (r2)
         mov r2, 12.(sp) ; Updating father src.
-        mov 18.(r2), 10.(sp) ; Updating father dest.
+        mov r2, 10.(sp) ; Updating father dest.
+        add #18., 10.(sp)
         br jRightB
 
         upMax4:
@@ -626,7 +197,8 @@ Black:
           mov #0, 18.(r2)
           mov #2, (r2)
           mov r2, 12.(sp) ; Updating father src.
-          mov 18.(r2), 10.(sp) ; Updating father dest.
+          mov r2, 10.(sp) ; Updating father dest.
+          add #18., 10.(sp)
           br jRightB
 
         nUpdate4:
@@ -674,7 +246,7 @@ jRightB1:
             ; Preparing the arguments for the REC function.
             mov #0, -(sp) ; Allocating source position.
             mov #0, -(sp) ; Allocating destenation position.
-            cmp #1, 20(sp) ; Checking if minimum or maximum was checked in the last call.
+            cmp #1, 20.(sp) ; Checking if minimum or maximum was checked in the last call.
             beq chngMin5 ; Changing maximum to minimum.
             mov #-100., -(sp) ; Miminum was checked in the last call.
             mov #1, -(sp) ; Maximum will be checked.
@@ -706,7 +278,8 @@ jRightB1:
               mov #1, 18.(r2)
               mov #2, (r2)
               mov r2, 12.(sp) ; Updating father src.
-              mov 36.(r2), 10.(sp) ; Updating father dest.
+              mov r2, 10.(sp) ; Updating father dest.
+              add #36., 10.(sp)
               br jRightB1
 
               upMax5:
@@ -723,7 +296,8 @@ jRightB1:
                 mov #1, 18.(r2)
                 mov #2, (r2)
                 mov r2, 12.(sp) ; Updating father src.
-                mov 36.(r2), 10.(sp) ; Updating father dest.
+                mov r2, 10.(sp) ; Updating father dest.
+                add #36., 10.(sp)
                 br jRightB1
 
               nUpdate5:
@@ -768,7 +342,7 @@ jRightB1:
              ; Preparing the arguments for the REC function.
              mov #0, -(sp) ; Allocating source position.
              mov #0, -(sp) ; Allocating destenation position.
-             cmp #1, 20(sp) ; Checking if minimum or maximum was checked in the last call.
+             cmp #1, 20.(sp) ; Checking if minimum or maximum was checked in the last call.
              beq chngMin6 ; Changing maximum to minimum.
              mov #-100., -(sp) ; Miminum was checked in the last call.
              mov #1, -(sp) ; Maximum will be checked.
@@ -802,7 +376,8 @@ jRightB1:
                mov #0, 14.(r2)
                mov #2, (r2)
                mov r2, 12.(sp) ; Updating father src.
-               mov 14.(r2), 10.(sp) ; Updating father dest.
+               mov r2, 10.(sp) ; Updating father dest.
+               add #14., 10.(sp)
                br jNxtCll3
 
                upMax6:
@@ -818,7 +393,8 @@ jRightB1:
                  mov #0, 14.(r2)
                  mov #2, (r2)
                  mov r2, 12.(sp) ; Updating father src.
-                 mov 14.(r2), 10.(sp) ; Updating father dest.
+                 mov r2, 10.(sp) ; Updating father dest.
+                 add #14., 10.(sp)
                  br jNxtCll3
 
                nUpdate6:
@@ -866,7 +442,7 @@ jRightB1:
             ; Preparing the arguments for the REC function.
             mov #0, -(sp) ; Allocating source position.
             mov #0, -(sp) ; Allocating destenation position.
-            cmp #1, 20(sp) ; Checking if minimum or maximum was checked in the last call.
+            cmp #1, 20.(sp) ; Checking if minimum or maximum was checked in the last call.
             beq chngMin7 ; Changing maximum to minimum.
             ; Changing minimum to maximum.
             mov #-100., -(sp) ; Miminum was checked in the last call.
@@ -900,7 +476,8 @@ jRightB1:
               mov #1, 14.(r2) ; Removing eaten white piece.
               mov #2, (r2)
               mov r2, 12.(sp) ; Updating father src.
-              mov 28.(r2), 10.(sp) ; Updating father dest.
+              mov r2, 10.(sp) ; Updating father dest.
+              add #28., 10.(sp)
               br jNxtCll4
 
 jNxtCll4:
@@ -910,7 +487,7 @@ jNxtCll4:
                 cmp 6(sp), 30.(sp) ; Comparing wp to the wp of the father.
                 ble nUpdate7
                 mov 6(sp), 30.(sp) ; Updating father wp to new maximum.
-                add #12, sp ; Popping all values besides registers backup.
+                add #12., sp ; Popping all values besides registers backup.
                 mov (sp)+, r5
                 mov (sp)+, r3
                 mov (sp)+, r2
@@ -920,7 +497,8 @@ jNxtCll4:
                 mov #1, 14.(r2) ; Removing eaten white piece.
                 mov #2, (r2)
                 mov r2, 12.(sp) ; Updating father src.
-                mov 28.(r2), 10.(sp) ; Updating father dest.
+                mov r2, 10.(sp) ; Updating father dest.
+                add #28., 10.(sp)
                 br jNxtCll4
 
               nUpdate7:
@@ -1289,7 +867,7 @@ jNxtCll4:
                          mov 8(sp), -(sp) ; Giving the label of the board as input.
                          jsr pc, countWB ; Counter number of vessels from each color.
                          add #2, sp ; Popping the no longer needed board label from stack.
-                         cmp 6(sp), 1
+                         cmp 6(sp), #1
                          beq WPforW ; if current player (input) is white - go to WPforW
                          ; If we got here then the current player is black. It means that
                          ; the last player to move was white.
@@ -1310,8 +888,8 @@ jNxtCll4:
 .=torg+7000
 
 Board:
-.word 0, 0, 0, 2, 0, 0, 0, 0
-.word 0, 0, 1, 0, 0, 0, 0, 0
+.word 0, 0, 0, 0, 0, 2, 0, 0
+.word 0, 0, 0, 0, 1, 0, 0, 0
 .word 0, 0, 0, 0, 0, 0, 0, 0
 .word 0, 0, 0, 0, 0, 0, 0, 0
 .word 0, 0, 0, 0, 0, 0, 0, 0

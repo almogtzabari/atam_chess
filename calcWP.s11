@@ -3,13 +3,13 @@
 ; 2. Current player's turn (1-white,2-black) - will be stored at 2(sp).
 ; Output:
 ; Winning parameter - will be stored at R4.
-  calcWP:         
+  calcWP:
          mov 0, -(sp) ; Leaving blank space for output.
          mov 0, -(sp) ; Leaving blank space for output.
          move 8(sp), -(sp) ; Giving the label of the board as input.
          jsr pc, countWB ; Counter number of vessels from each color.
          add #2, sp ; Popping the no longer needed board label from stack.
-         cmp 6(sp), 1
+         cmp 6(sp), #1
          beq WPforW ; if current player (input) is white - go to WPforW
          ; If we got here then the current player is black. It means that
          ; the last player to move was white.
