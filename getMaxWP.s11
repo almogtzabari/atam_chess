@@ -9,6 +9,25 @@ getMaxWP:
   mov Player, -(sp) ; Moving the player we check for to the stack.
   mov Steps, -(sp) ; Moving number of steps to stack.
   jsr pc, getWPRec
+  add #6, sp
+  mov (sp)+, @8.(sp) ; Writing the best wp to WinParam label.
+  sub #5000. (sp) ;
+  mov r0, -(sp)
+  mov r1, -(sp)
+  clr r0
+  mov 4(sp), r1
+  div #2, r1
+  mov r0, @12.(sp)
+  clr r0
+  sub #5000., 6(sp)
+  mov 6(sp), r1
+  div #2, r1
+  mov r0, @14.(sp)
+  mov (sp)+, r1
+  mov (sp)+, r0
+  add #4, sp
+  rts pc
+
 
 
 getWPRec:
@@ -126,7 +145,7 @@ White:
         bgt noUpdate0
         ;Updating father wp , src and dest.
         mov 6(sp), 30.(sp) ; Updating father wp to new minimum.
-        add #12, sp ; Popping all values besides registers backup.
+        add #12., sp ; Popping all values besides registers backup.
         mov (sp)+, r5
         mov (sp)+, r3
         mov (sp)+, r2
@@ -142,7 +161,7 @@ White:
           cmp 6(sp), 30.(sp) ; Comparing wp to the wp of the father.
           ble noUpdate0
           mov 6(sp), 30.(sp) ; Updating father wp to new maximum.
-          add #12, sp ; Popping all values besides registers backup.
+          add #12., sp ; Popping all values besides registers backup.
           mov (sp)+, r5
           mov (sp)+, r3
           mov (sp)+, r2
@@ -155,7 +174,7 @@ White:
           br LeftW
 
         noUpdate0:
-          add #12.(sp) ; Popping all values besides registers backup.
+          add #12., (sp) ; Popping all values besides registers backup.
           mov (sp)+, r5
           mov (sp)+, r3
           mov (sp)+, r2
@@ -219,7 +238,7 @@ White:
               bgt noUpdate1
               ;Updating father wp , src and dest.
               mov 6(sp), 30.(sp) ; Updating father wp to new minimum.
-              add #12.(sp) ; Popping all values besides registers backup.
+              add #12., sp ; Popping all values besides registers backup.
               mov (sp)+, r5
               mov (sp)+, r3
               mov (sp)+, r2
@@ -236,7 +255,7 @@ White:
                 cmp 6(sp), 30.(sp) ; Comparing wp to the wp of the father.
                 ble noUpdate0
                 mov 6(sp), 30.(sp) ; Updating father wp to new maximum.
-                add #12.(sp) ; Popping all values besides registers backup.
+                add #12., sp ; Popping all values besides registers backup.
                 mov (sp)+, r5
                 mov (sp)+, r3
                 mov (sp)+, r2
@@ -250,7 +269,7 @@ White:
                 br LeftW
 
               noUpdate1:
-                add #12.(sp) ; Popping all values besides registers backup.
+                add #12., sp ; Popping all values besides registers backup.
                 mov (sp)+, r5
                 mov (sp)+, r3
                 mov (sp)+, r2
@@ -316,7 +335,7 @@ White:
               bgt noUpdate2
               ;Updating father wp , src and dest.
               mov 6(sp), 30.(sp) ; Updating father wp to new minimum.
-              add #12.(sp) ; Popping all values besides registers backup.
+              add #12., sp ; Popping all values besides registers backup.
               mov (sp)+, r5
               mov (sp)+, r3
               mov (sp)+, r2
@@ -332,7 +351,7 @@ White:
                 cmp 6(sp), 30.(sp) ; Comparing wp to the wp of the father.
                 ble noUpdate0
                 mov 6(sp), 30.(sp) ; Updating father wp to new maximum.
-                add #12.(sp) ; Popping all values besides registers backup.
+                add #12., sp ; Popping all values besides registers backup.
                 mov (sp)+, r5
                 mov (sp)+, r3
                 mov (sp)+, r2
@@ -345,7 +364,7 @@ White:
                 br NextCell
 
               noUpdate0:
-                add #12.(sp) ; Popping all values besides registers backup.
+                add #12., sp ; Popping all values besides registers backup.
                 mov (sp)+, r5
                 mov (sp)+, r3
                 mov (sp)+, r2
@@ -411,7 +430,7 @@ White:
               bgt noUpdate3
               ;Updating father wp , src and dest.
               mov 6(sp), 30.(sp) ; Updating father wp to new minimum.
-              add #12.(sp) ; Popping all values besides registers backup.
+              add #12., sp ; Popping all values besides registers backup.
               mov (sp)+, r5
               mov (sp)+, r3
               mov (sp)+, r2
@@ -428,7 +447,7 @@ White:
                 cmp 6(sp), 30.(sp) ; Comparing wp to the wp of the father.
                 ble noUpdate3
                 mov 6(sp), 30.(sp) ; Updating father wp to new maximum.
-                add #12.(sp) ; Popping all values besides registers backup.
+                add #12., sp ; Popping all values besides registers backup.
                 mov (sp)+, r5
                 mov (sp)+, r3
                 mov (sp)+, r2
@@ -442,7 +461,7 @@ White:
                 br NextCell
 
               noUpdate0:
-                add #12.(sp) ; Popping all values besides registers backup.
+                add #12., sp ; Popping all values besides registers backup.
                 mov (sp)+, r5
                 mov (sp)+, r3
                 mov (sp)+, r2
@@ -545,7 +564,7 @@ Black:
         cmp 6(sp), 30.(sp) ; Comparing wp to the wp of the father.
         bgt noUpdate4
         mov 6(sp), 30.(sp) ; Updating father wp to new minimum.
-        add #12.(sp) ; Popping all values besides registers backup.
+        add #12., sp ; Popping all values besides registers backup.
         mov (sp)+, r5
         mov (sp)+, r3
         mov (sp)+, r2
@@ -574,7 +593,7 @@ Black:
           br RightB
 
         noUpdate4:
-          add #12.(sp) ; Popping all values besides registers backup.
+          add #12., sp ; Popping all values besides registers backup.
           mov (sp)+, r5
           mov (sp)+, r3
           mov (sp)+, r2
@@ -638,7 +657,7 @@ Black:
               cmp 6(sp), 30.(sp) ; Comparing wp to the wp of the father.
               bgt noUpdate5
               mov 6(sp), 30.(sp) ; Updating father wp to new minimum.
-              add #12.(sp) ; Popping all values besides registers backup.
+              add #12., sp ; Popping all values besides registers backup.
               mov (sp)+, r5
               mov (sp)+, r3
               mov (sp)+, r2
@@ -655,7 +674,7 @@ Black:
                 cmp 6(sp), 30.(sp) ; Comparing wp to the wp of the father.
                 ble noUpdate5
                 mov 6(sp), 30.(sp) ; Updating father wp to new maximum.
-                add #12.(sp) ; Popping all values besides registers backup.
+                add #12., sp ; Popping all values besides registers backup.
                 mov (sp)+, r5
                 mov (sp)+, r3
                 mov (sp)+, r2
@@ -669,7 +688,7 @@ Black:
                 br RightB
 
               noUpdate5:
-                add #12.(sp) ; Popping all values besides registers backup.
+                add #12., sp ; Popping all values besides registers backup.
                 mov (sp)+, r5
                 mov (sp)+, r3
                 mov (sp)+, r2
@@ -732,7 +751,7 @@ Black:
                cmp 6(sp), 30.(sp) ; Comparing wp to the wp of the father.
                bgt noUpdate6
                mov 6(sp), 30.(sp) ; Updating father wp to new minimum.
-               add #12.(sp) ; Popping all values besides registers backup.
+               add #12., sp ; Popping all values besides registers backup.
                mov (sp)+, r5
                mov (sp)+, r3
                mov (sp)+, r2
@@ -748,7 +767,7 @@ Black:
                  cmp 6(sp), 30.(sp) ; Comparing wp to the wp of the father.
                  ble noUpdate6
                  mov 6(sp), 30.(sp) ; Updating father wp to new maximum.
-                 add #12.(sp) ; Popping all values besides registers backup.
+                 add #12., sp ; Popping all values besides registers backup.
                  mov (sp)+, r5
                  mov (sp)+, r3
                  mov (sp)+, r2
@@ -761,7 +780,7 @@ Black:
                  br NextCell
 
                noUpdate6:
-                 add #12.(sp) ; Popping all values besides registers backup.
+                 add #12., sp ; Popping all values besides registers backup.
                  mov (sp)+, r5
                  mov (sp)+, r3
                  mov (sp)+, r2
@@ -829,7 +848,7 @@ Black:
               bgt noUpdate7
               ; Updating new wp to father wp.
               mov 6(sp), 30.(sp) ; Updating father wp to new minimum.
-              add #12.(sp) ; Popping all values besides registers backup.
+              add #12., sp ; Popping all values besides registers backup.
               mov (sp)+, r5
               mov (sp)+, r3
               mov (sp)+, r2
@@ -860,7 +879,7 @@ Black:
                 br NextCell
 
               noUpdate7:
-                add #12.(sp) ; Popping all values besides registers backup.
+                add #12., sp ; Popping all values besides registers backup.
                 mov (sp)+, r5
                 mov (sp)+, r3
                 mov (sp)+, r2
