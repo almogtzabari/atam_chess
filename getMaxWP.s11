@@ -12,6 +12,8 @@ getMaxWP:
 
 
 getWPRec:
+ ; --- STOP TERMS ---
+ ; Preparing to call for checkWin with the previous player (last player to move).
  mov #Board, -(sp) ; Moving board adress to stack.
  mov 10(sp), -(sp) ; Moving current player to the top of the stack.
  mov r0, -(sp) ; Backing up r0.
@@ -25,6 +27,8 @@ getWPRec:
  add #4, (sp) ; Pop the other player from the stack.
  tst 4(sp) ; Check if the current number of steps is 0.
  bne chkMoves
+
+ ;Preparing to call calcWP
  mov r4 -(sp) ; Backing up r4.
  mov #Board, -(sp) ; Moving board adress to stack.
  mov 10.(sp), -(sp) ; Moving current player to the top of the stack (calcWP will give us the points for the second player - not the one passed).
@@ -44,6 +48,9 @@ getWPRec:
      mov #-20., 6(sp)
      add #4, sp
      rts pc
+; --- END OF STOP TERMS ---
+
+
 
      ; r0 - Current row index.
      ; r1 - Current column index.
@@ -83,13 +90,20 @@ White:
       beq LeftW ; If the upper right piece is white, cannot go there, check legal moves to the left.
       cmp -14.(r2), #2 ; Checking if the upper right piece is black.
       beq EatRW ; If the upper right piece is black, check if the white piece can eat it.
+
+      ; --- WHITE MOVE RIGHT ---
+      ; Making the move of the white player.
       mov #1, -14.(r2) ; Moving white piece to the new place.
       mov #0, (r2) ; Removing white piece from the last place it was.
+
+      ; Backing up registers before calling the REC function.
       mov r0, -(sp) ; Backing up r0.
       mov r1, -(sp) ; Backing up r1.
       mov r2, -(sp) ; Backing up r2.
       mov r3, -(sp) ; Backing up r3.
       mov r5, -(sp) ; Backing up r5.
+
+      ; Preparing the arguments for the REC function.
       mov 22.(sp), -(sp) ; Moving SrcPos label address.
       mov 22.(sp), -(sp) ; Moving DstPos label address.
       mov 22.(sp), -(sp) ; Moving Wp label address.
@@ -99,6 +113,8 @@ White:
       sub #1, (sp) ; Substract 1 from number of steps.
       mov 22.(sp), -(sp) ; Allocating a place for temp wp.
       jsr pc, getWPRec
+
+      ; Preparing to call for minOrMax
       mov r4 -(sp) ; Backing up r4.
       mov 30.(sp), -(sp) ; Changing to the other player.
       mov #Player, -(sp) ; Moving checked player
@@ -106,11 +122,12 @@ White:
       add #4, sp ; Pop checked player and current player.
       cmp r4, #1 ; Check if we need to look for maximum.
       bne minimum
+      ; We are looking for maximum.
 
 
 
-
-
+      minimum:
+      ; We are looking for minimum.
 
 
 
