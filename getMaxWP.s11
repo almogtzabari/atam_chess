@@ -544,7 +544,7 @@ rts pc
 ; 3. countWB
 ; 4. moveChk
 
-; This method is doing the moving of a piece and calls the reccursive function.
+; This method will do the moving of a white piece and calls the reccursive function.
 ; Input:
 ; 1. Address of piece to move.
 ; 2. Address of eaten piece. If it is not an eat the value will be 0.
@@ -667,9 +667,12 @@ tst 2(sp) ;
 beq nSrcDst ; No eat. We don't need to restore. No need to update src and dst.
 mov #2., @2.(sp) ; Restoring eaten black piece.
 br nSrcDst ; No need to update src and dst.
-
 ; END OF WhiteMov
 
+; This method will do the moving of a black piece and calls the reccursive function.
+; Input:
+; 1. Address of piece to move.
+; 2. Address of eaten piece. If it is not an eat the value will be 0.
 BlackMov:
 ; Making the move of the black player.
 mov #2, @4.(sp) ; Moving black piece to the new place.
@@ -789,7 +792,6 @@ tst 2(sp) ;
 beq nSrcDstB ; No eat. We don't need to restore. No need to update src and dst.
 mov #1., @2.(sp) ; Restoring eaten white piece.
 br nSrcDstB ; No need to update src and dst.
-
 ; END OF BlackMov
 
 
