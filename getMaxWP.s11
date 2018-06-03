@@ -60,7 +60,7 @@ beq whoWon ; If current player wins - jumps.
 ; If we got here no one won.
 add #4, sp ; Pop the other player and board from the stack.
 tst 2(sp) ; Check if the current number of steps is 0.
-bne chkMoves
+bne jchkMov
 
 ; If we got here steps is 0.
 mov #Board, -(sp) ; Moving board adress to stack.
@@ -70,6 +70,61 @@ jsr pc, calcWP ; Output will be at r4.
 add #4, sp
 mov r4, 8.(sp) ; Copying calculated wp from r4 to the fathers wp.
 rts pc
+
+jchkMov:
+mov 4(sp), -(sp) ; Moving current player to the top of the stack.
+mov #0, -(sp) ; Allocating a place for number of moves for the current player.
+jsr pc, moveChk
+mov (sp)+, (sp) ; Puts the output of moveChk instead of current player.
+tst (sp)+  ; Checks if number of legal moves of current player is 0.
+bne chkMoves
+;If we get here the current player has no legal moves and we need to skip his turn.
+mov #0, -(sp) ; src
+mov #0, -(sp) ; dst
+cmp 10.(sp), #1 ; check minOrMax of father
+bne putMax
+; Put min:
+mov #100., -(sp) ; wp=100
+mov #-1., -(sp) ; minOrMax=-1
+putMax:
+mov #-100., -(sp) ; wp=-100
+mov #1., -(sp) ; minOrMax=1
+mov #3., -(sp)
+sub 14.(sp), (sp) ; (current_player)`
+mov 12.(sp), -(sp)
+sub #1., (sp)
+jsr pc, getWPRec
+
+cmp #1., 18.(sp) ; checking minOrMax of father
+beq wasMax
+; father was min
+cmp 6.(sp), 20.(sp) ; checks WPs
+bgt noUp
+; If we got here we need to update
+mov 6.(sp), 20.(sp) ; updating wp
+mov 8.(sp), 22.(sp) ; updating father dest
+mov 10.(sp), 24.(sp) ; updating father src
+add #12., sp
+rts pc
+
+wasMax:
+; father was max
+cmp 6.(sp), 20.(sp) ; checks WPs
+ble noUp
+; If we got here we need to update
+mov 6.(sp), 20.(sp) ; updating wp
+mov 8.(sp), 22.(sp) ; updating father dest
+mov 10.(sp), 24.(sp) ; updating father src
+add #12., sp
+rts pc
+
+noUp:
+add #12., sp
+rts pc
+
+
+
+
 
 whoWon:
 cmp (sp)+, Player ; Check if the current player is the same as found in label Player.
@@ -502,7 +557,7 @@ cmp 34.(sp), #1 ; The father is looking for a maximum.
 beq upMax ; Father was looking for a maximum.
 
 ; Father was looking for a minimum.
-cmp 6(sp), 36.(sp) ; Comparing wp to the wp of the father.
+cmp 6.(sp), 36.(sp) ; Comparing wp to the wp of the father.
 bgt nUpdate
 
 ; Updating minimum.
@@ -989,7 +1044,7 @@ Board:
 .word 0,0,0,1,0,0,0,1
 .word 0,0,2,0,0,0,0,0
 Player:.word 2
-Steps:.word 1
+Steps:.word 3
 WP: .word 0
 SrcPos: .word 0
 DstPos: .word 0
