@@ -86,9 +86,13 @@ bne putMax
 ; Put min:
 mov #100., -(sp) ; wp=100
 mov #-1., -(sp) ; minOrMax=-1
+jmp cont
+
 putMax:
 mov #-100., -(sp) ; wp=-100
 mov #1., -(sp) ; minOrMax=1
+
+cont:
 mov #3., -(sp)
 sub 14.(sp), (sp) ; (current_player)`
 mov 12.(sp), -(sp)
@@ -1035,14 +1039,14 @@ br End1 ;Found a legal move.
 .=torg+7000
 
 Board:
+.word 0,0,0,1,0,1,0,0
+.word 0,0,0,0,2,0,0,0
+.word 0,0,0,1,0,1,0,0
+.word 0,0,1,0,0,0,1,0
 .word 0,0,0,0,0,0,0,0
 .word 0,0,0,0,0,0,0,0
 .word 0,0,0,0,0,0,0,0
 .word 0,0,0,0,0,0,0,0
-.word 0,0,0,0,0,2,0,0
-.word 0,0,0,0,1,0,1,0
-.word 0,0,0,1,0,0,0,1
-.word 0,0,2,0,0,0,0,0
 Player:.word 2
 Steps:.word 3
 WP: .word 0
