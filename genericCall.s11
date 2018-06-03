@@ -1,0 +1,132 @@
+; --- WHITE MOVE RIGHT ---
+; Inserting new location of the white piece to stack
+mov r2, -(sp)
+sub #14., (sp)
+; Inserting location of eaten piece. If There is no eaten piece inserting 0
+; No eaten piece. Inserting 0.
+mov #0, -(sp)
+; Makes the move
+jsr pc, WhiteMov
+add #4., sp
+jmp LeftW
+
+
+WhiteMov:
+; Making the move of the white player.
+mov #1, @4.(sp) ; Moving white piece to the new place.
+mov #0, (r2) ; Removing white piece from the last place it was.
+
+; Checks if there is an eat
+tst 2(sp)
+beq noEat
+
+; If we got here there is an eat
+mov #0, @2.(sp) ; Removing eaten piece
+
+noEat:
+
+; Backing up registers before calling the REC function.
+mov r0, -(sp) ; Backing up r0.
+mov r1, -(sp) ; Backing up r1.
+mov r2, -(sp) ; Backing up r2.
+mov r3, -(sp) ; Backing up r3.
+mov r5, -(sp) ; Backing up r5.
+
+; Preparing the arguments for the REC function.
+mov #0, -(sp) ; Allocating source position.
+mov #0, -(sp) ; Allocating destenation position.
+cmp #1, 26.(sp) ; Checking if minimum or maximum was checked in the last call.
+beq chngMin ; Changing maximum to minimum.
+
+; If we got here in the next REC we will check for maximum
+mov #-100., -(sp) ; Miminum was checked in the last call.
+mov #1, -(sp) ; Maximum will be checked.
+br changed
+
+chngMin: ; Changing maximum to minimum.
+  mov #100., -(sp) ; Maximum was checked in the last call.
+  mov #-1., -(sp) ; Minimum will be checked.
+
+  changed: ; Changed maximum\minimum value.
+    mov #3, -(sp)
+    sub 30.(sp), (sp) ; Chaning to the other player.
+    mov 28.(sp), -(sp) ; Copying last number of steps.
+    sub #1, (sp) ; Substract 1 from number of steps.
+    jsr pc, getWPRec
+
+    cmp 34.(sp), #1 ; The father is looking for a maximum.
+    beq upMax ; Father was looking for a maximum.
+
+    ; Father was looking for a minimum.
+    cmp 6(sp), 36.(sp) ; Comparing wp to the wp of the father.
+    bgt nUpdate
+
+    ; Updating minimum.
+    mov 6(sp), 36.(sp) ; Updating father wp to new minimum.
+    add #12., sp ; Popping all values besides registers backup.
+    mov (sp)+, r5
+    mov (sp)+, r3
+    mov (sp)+, r2
+    mov (sp)+, r1
+    mov (sp)+, r0
+
+    ; Restoring previous board and updating father src and dst.
+    ; Restoring white piece previous location.
+    mov #1, (r2)
+    mov #0, @4.(sp)
+    ; Checks if there was an eat:
+    tst 2(sp) ;
+    beq SrcDst ; No eat. We don't need to restore. go to update src and dst.
+    ; If we got here there was an eat and we need to restore it.
+    mov #2., @2.(sp) ; Restoring eaten black piece.
+    br SrcDst
+
+    SrcDst:
+    mov r2, 18.(sp) ; Updating father src.
+    mov 4(sp), 16.(sp) ; Updating father dest.
+    rts pc
+
+    nSrcDst:
+    rts pc
+
+    upMax:
+      ; The father is looking for maximum
+      cmp 6(sp), 36.(sp) ; Comparing wp to the wp of the father.
+      ble nUpdate ; Jumps if we do not need to update.
+
+      ; We need to update to new Maximum
+      mov 6(sp), 36.(sp) ; Updating father wp to new maximum.
+      add #12., sp ; Popping all values besides registers backup.
+      mov (sp)+, r5
+      mov (sp)+, r3
+      mov (sp)+, r2
+      mov (sp)+, r1
+      mov (sp)+, r0
+
+      ; Restoring previous board and updating father src and dst.
+      ; Restoring white piece previous location.
+      mov #1, (r2)
+      mov #0, @4.(sp)
+      ; Checks if there was an eat:
+      tst 2(sp) ;
+      beq SrcDst ; No eat. We don't need to restore. go to update src and dst.
+      ; If we got here there was an eat and we need to restore it.
+      mov #2., @2.(sp) ; Restoring eaten black piece.
+      br SrcDst
+
+        nUpdate:
+          add #12., sp ; Popping all values besides registers backup.
+          mov (sp)+, r5
+          mov (sp)+, r3
+          mov (sp)+, r2
+          mov (sp)+, r1
+          mov (sp)+, r0
+          ; Restoring previous board and updating father src and dst.
+          ; Restoring white piece previous location.
+          mov #1, (r2)
+          mov #0, @4.(sp)
+          ; Checks if there was an eat:
+          tst 2(sp) ;
+          beq nSrcDst ; No eat. We don't need to restore. No need to update src and dst.
+          mov #2., @2.(sp) ; Restoring eaten black piece.
+          br nSrcDst ; No need to update src and dst.

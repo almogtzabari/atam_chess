@@ -40,22 +40,24 @@ getWPRec:
  ; --- STOP TERMS ---
  ; Preparing to call for checkWin with the previous player (last player to move).
  mov #Board, -(sp) ; Moving board adress to stack.
- mov 6(sp), -(sp) ; Moving current player to the top of the stack.
- mov r0, -(sp) ; Backing up r0.
- mov #3, r0
- sub 2(sp), r0 ; Substract number of player from 3 will give us the other player.
- mov r0, 2(sp) ; 2(sp) will now be the current player and the value of (sp) will be used by checkWin.
- mov (sp), r0 ; Restoring r0's value.
+ ; Pushing to stack the last player to make a move.
+ mov #3, -(sp)
+ sub 6(sp), (sp) ; Moving current player to the top of the stack.
+ mov #0, -(sp) ; checkWin Output will be written to here.
+
  jsr pc, checkWin ; CheckWin will use the place allocted for r0 in the stack for output.
  cmp #1, (sp)+ ; Pop the return value of checkWin and check which player won.
- beq whoWon
+ beq whoWon ; If last player wins - jumps.
+
+ ; If we got here last player didn't win
  add #4, sp ; Pop the other player and board from the stack.
  tst 2(sp) ; Check if the current number of steps is 0.
  bne chkMoves
- ; We get here in case steps is 0.
+
+ ; If we got here steps is 0.
  mov #Board, -(sp) ; Moving board adress to stack.
  mov 6(sp), -(sp) ; Moving current player to the top of the stack.
- jsr pc, calcWP
+ jsr pc, calcWP ; Output will be at r4.
  add #4, sp
  mov r4, 8.(sp) ; Copying calculated wp from r4 to the fathers wp.
  rts pc
@@ -63,10 +65,12 @@ getWPRec:
  whoWon:
    cmp (sp)+, Player ; Check if the current player is the same as found in label Player.
    bne playerLos
+   ; The player who won is the player we check
    mov #20., 10.(sp)
    tst (sp)+
    rts pc
    playerLos:
+     ;The player who won is not the player we check.
      mov #-20., 10.(sp)
      tst (sp)+
      rts pc
@@ -579,6 +583,7 @@ Black:
 
       ; --- BLACK MOVE LEFT ---
       ; Making the move of the black player.
+
       mov #2, 18.(r2) ; Moving black piece to the new place.
       mov #0, (r2) ; Removing black piece from the last place it was.
 
