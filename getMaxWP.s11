@@ -56,7 +56,8 @@ bne chkMoves
 
 ; If we got here steps is 0.
 mov #Board, -(sp) ; Moving board adress to stack.
-mov 6(sp), -(sp) ; Moving current player to the top of the stack.
+;mov 6(sp), -(sp) ; Moving current player to the top of the stack.
+mov Player, -(sp) ; Moving current player to the top of the stack.
 jsr pc, calcWP ; Output will be at r4.
 add #4, sp
 mov r4, 8.(sp) ; Copying calculated wp from r4 to the fathers wp.
@@ -421,7 +422,7 @@ mov 0, -(sp) ; Leaving blank space for output.
 mov 8(sp), -(sp) ; Giving the label of the board as input.
 jsr pc, countWB ; Counter number of vessels from each color.
 add #2, sp ; Popping the no longer needed board label from stack.
-cmp 6(sp), #1
+cmp 6(sp), #2
 beq WPforW ; if current player (input) is white - go to WPforW
 ; If we got here then the current player is black. It means that
 ; the last player to move was white.
@@ -971,16 +972,16 @@ br End1 ;Found a legal move.
 .=torg+7000
 
 Board:
-.word 0, 0, 0, 0, 0, 2, 0, 0
-.word 0, 0, 0, 0, 1, 0, 0, 0
-.word 0, 0, 0, 0, 0, 0, 0, 0
-.word 0, 0, 0, 0, 0, 0, 0, 0
-.word 0, 0, 0, 0, 0, 0, 0, 0
-.word 0, 0, 0, 0, 0, 0, 0, 0
-.word 0, 0, 0, 0, 0, 0, 0, 0
-.word 0, 0, 0, 0, 0, 0, 0, 0
-Player: .word 2
-Steps: .word 1
+.word 0,0,0,0,0,2,0,0
+.word 0,0,0,0,1,0,0,0
+.word 0,0,0,0,0,0,0,0
+.word 0,0,0,0,1,0,0,0
+.word 0,0,0,0,0,0,0,0
+.word 0,0,0,0,0,0,0,0
+.word 0,0,0,0,0,0,0,0
+.word 0,0,0,0,0,0,0,0
+Player:.word 2
+Steps:.word 2
 WP: .word 0
 SrcPos: .word 0
 DstPos: .word 0
