@@ -4,143 +4,158 @@ main:
 mov #main, sp
 mov #SrcPos, -(sp)
 mov #DstPos, -(sp)
-mov #WP, -(sp)
+mov #WinParam, -(sp)
 jsr pc, getMaxWP
 halt
 
+; This function makes first preperations and calls the reccursive function.
 getMaxWP:
-mov #0, -(sp) ; Allocating source position.
-mov #0, -(sp) ; Allocating destenation position.
-mov #-100., -(sp) ; Allocating place for WP.
-mov #1, -(sp) ;  Maximum for the first player.
-mov Player, -(sp) ; Moving the player we check for to the stack.
-mov Steps, -(sp) ; Moving number of steps to stack.
-jsr pc, getWPRec
-add #6, sp
-mov (sp)+, @6.(sp) ; Writing the best wp to WinParam label.
+; Preparing the stack for the first call.
+mov #0, -(sp) ; Allocating place source position in stack.
+mov #0, -(sp) ; Allocating place destenation position in stack.
+mov #-100., -(sp) ; Allocating place for WP in stack.
+mov #1, -(sp) ;  Allocating place for minOrMax of the first player.
+mov Player, -(sp) ; Pushing the player we check to the stack.
+mov Steps, -(sp) ; Pushing number of steps to stack.
+
+; Calling the recursive function.
+jsr pc, getWPRec ;
+
+; Recursive function finished
+; Popping unnecessary items from stack and writing output to given labels:
+add #6, sp ; Popping unnecessary items from stack.
+mov (sp)+, @6.(sp) ; Writing the best wp to WP label.
+; SrcPos and DstPos returned as address of the board.
+; Translating the addresses of DstPos to index:
 sub #Board, (sp) ;
 mov r0, -(sp)
 mov r1, -(sp)
 clr r0
 mov 4(sp), r1
 div #2, r0
-mov r0, @12.(sp)
+mov r0, @12.(sp) ; Writing the translated index of DstPos
+; Translating the addresses of SrcPos to index:
 clr r0
 sub #Board, 6(sp)
 mov 6(sp), r1
 div #2, r0
-mov r0, @14.(sp)
+mov r0, @14.(sp) ; Writing the translated index of SrcPos
+; Restoring registers values:
 mov (sp)+, r1
 mov (sp)+, r0
 add #4, sp
-rts pc
+rts pc ; Returning to main.
 
-;
+; This is the reccursive function.
 getWPRec:
-; --- STOP TERMS ---
-; Preparing to call for checkWin with the previous player (last player to move).
+; ----- STOP TERMS -----
+; Preparing to call for checkWin with the last player to make a move:
 mov #Board, -(sp) ; Moving board adress to stack.
-; Pushing to stack the last player to make a move.
+; Pushing the last player to make a move to stack.
+; The current player has changed before calling the rec function, therefore
+; we switch to the other player (black + white - current_player):
 mov #3, -(sp)
-sub 8.(sp), (sp) ; Moving current player to the top of the stack.
-mov #0, -(sp) ; checkWin Output will be written to here.
+sub 8.(sp), (sp)
+mov #0, -(sp) ; Allocating space for output of checkWin.
+; Checks if the last player to make a move won:
+jsr pc, checkWin
+cmp #1, (sp)+ ; Checking the output and pops it from stack.
+beq whoWon ; Jumps if he won.
 
-; Checks if the last player to make a move wins.
-jsr pc, checkWin ; CheckWin will use the place allocted for r0 in the stack for output.
-cmp #1, (sp)+ ; Pop the return value of checkWin and check which player won.
-beq whoWon ; If last player wins - jumps.
-
-; Checks if the current player wins.
+; Last player didn't win. Now we'll check if the current player won:
 mov 8.(sp), (sp) ; Moving current player to the top of the stack.
-mov #0, -(sp) ; checkWin Output will be written to here.
-jsr pc, checkWin ; CheckWin will use the place allocted for r0 in the stack for output.
-cmp #1, (sp)+ ; Pop the return value of checkWin and check which player won.
-beq whoWon ; If current player wins - jumps.
+mov #0, -(sp) ; Allocating space for output of checkWin.
+jsr pc, checkWin
+cmp #1, (sp)+ ; Checking the output and pops it from stack.
+beq whoWon ; Jumps if he won.
 
 ; If we got here no one won.
 add #4, sp ; Pop the other player and board from the stack.
 tst 2(sp) ; Check if the current number of steps is 0.
-bne jchkMov
+bne jchkMov ; Jumps if (steps > 0)
 
 ; If we got here steps is 0.
 mov #Board, -(sp) ; Moving board adress to stack.
-;mov 6(sp), -(sp) ; Moving current player to the top of the stack.
-mov Player, -(sp) ; Moving current player to the top of the stack.
+mov Player, -(sp) ; Moving the player we check to the top of the stack.
 jsr pc, calcWP ; Output will be at r4.
-add #4, sp
-mov r4, 8.(sp) ; Copying calculated wp from r4 to the fathers wp.
+add #4, sp ; Popping the no longer needed inputs (board and player).
+mov r4, 8.(sp) ; Copying output from r4 to caller's wp.
 rts pc
 
 jchkMov:
+; Checking if the current player has legal moves to make:
 mov 4(sp), -(sp) ; Moving current player to the top of the stack.
-mov #0, -(sp) ; Allocating a place for number of moves for the current player.
+mov #0, -(sp) ; Allocating a place for output.
 jsr pc, moveChk
-mov (sp)+, (sp) ; Puts the output of moveChk instead of current player.
-tst (sp)+  ; Checks if number of legal moves of current player is 0.
-bne chkMoves
-;If we get here the current player has no legal moves and we need to skip his turn.
-mov #0, -(sp) ; src
-mov #0, -(sp) ; dst
-cmp 10.(sp), #1 ; check minOrMax of father
-bne putMax
-; Put min:
-mov #100., -(sp) ; wp=100
-mov #-1., -(sp) ; minOrMax=-1
-jmp cont
+mov (sp)+, (sp) ; Writing the output of moveChk instead of current player (override).
+tst (sp)+  ; Checks if number of legal moves of current player is 0 and pops it.
+bne chkMoves ; Jumps if he has moves to make.
+; If we got here the current player has no legal moves and we need to skip his turn.
+; Preparing to call next iteration:
+mov #0, -(sp) ; Allocating space for SrcPos.
+mov #0, -(sp) ; Allocating space for DstPos.
+cmp 10.(sp), #1 ; Checks what the caller function (father) was looking for.
+bne putMax ; Jumps if the father was looking for minimum.
+; Father was looking for maximum. Now we should put minimum:
+mov #100., -(sp) ; Pushing wp. WP = MAX_VALUE
+mov #-1., -(sp) ; Pushing -1. This means that we are looking for minimum now.
+jmp cont ; Done changing max->min.
 
 putMax:
-mov #-100., -(sp) ; wp=-100
-mov #1., -(sp) ; minOrMax=1
+; Father was looking for minimum. Now we should put maximum:
+mov #-100., -(sp) ; Pushing wp. WP = MIN_VALUE
+mov #1., -(sp) ; Pushing -1. This means that we are looking for maximum now.
 
 cont:
+; Continues the preperations.
+; Switch players:
 mov #3., -(sp)
-sub 14.(sp), (sp) ; (current_player)`
+sub 14.(sp), (sp)
+; Reducing steps by 1:
 mov 12.(sp), -(sp)
 sub #1., (sp)
 jsr pc, getWPRec
-
-cmp #1., 18.(sp) ; checking minOrMax of father
-beq wasMax
-; father was min
-cmp 6.(sp), 20.(sp) ; checks WPs
-bgt noUp
-; If we got here we need to update
-mov 6.(sp), 20.(sp) ; updating wp
-mov 8.(sp), 22.(sp) ; updating father dest
-mov 10.(sp), 24.(sp) ; updating father src
-add #12., sp
+; Checking the returned values and updating if needed:
+cmp #1., 18.(sp) ; Checks what the caller function (father) was looking for.
+beq wasMax ; Jumps if the father was looking for maximum.
+; Father was looking for minimum. Checks if we need to update WP to the new WP.
+cmp 6.(sp), 20.(sp) ; Comparing WPs.
+bgt noUp ; Jumps if we don't need to update.
+; If we got here we need to update:
+mov 6.(sp), 20.(sp) ; Updating father's wp.
+mov 8.(sp), 22.(sp) ; Updating father's DstPos.
+mov 10.(sp), 24.(sp) ; Updating father's SrcPos.
+add #12., sp ; Popping unnecessary items from stack.
 rts pc
 
 wasMax:
-; father was max
-cmp 6.(sp), 20.(sp) ; checks WPs
-ble noUp
-; If we got here we need to update
-mov 6.(sp), 20.(sp) ; updating wp
-mov 8.(sp), 22.(sp) ; updating father dest
-mov 10.(sp), 24.(sp) ; updating father src
-add #12., sp
+; Father was looking for maximum. Checks if we need to update WP to the new WP.
+cmp 6.(sp), 20.(sp) ; Comparing WPs.
+ble noUp ; Jumps if we don't need to update.
+; If we got here we need to update:
+mov 6.(sp), 20.(sp) ; Updating father's wp.
+mov 8.(sp), 22.(sp) ; Updating father's DstPos.
+mov 10.(sp), 24.(sp) ; Updating father's SrcPos.
+add #12., sp ; Popping unnecessary items from stack.
 rts pc
 
 noUp:
-add #12., sp
+; If we got here we do not need to update.
+add #12., sp ; Popping unnecessary items from stack.
 rts pc
-
-
-
-
 
 whoWon:
-cmp (sp)+, Player ; Check if the current player is the same as found in label Player.
-bne playerLos
-; The player who won is the player we check
-mov #20., 10.(sp)
-tst (sp)+
+; Checks who won.
+cmp (sp)+, Player ; Check if the current player is the one we check.
+bne playerLos ; Jumps if the winner is not who we check.
+; The winner is the player we check. Updating WP to 20:
+mov #20., 10.(sp) ; WP = 20.
+tst (sp)+ ; Popping the no longer needed board from stack.
 rts pc
 playerLos:
-;The player who won is not the player we check.
-mov #-20., 10.(sp)
-tst (sp)+
+;The winner is not the player we check. Updating WP to -20:
+mov #-20., 10.(sp) ; WP = -20.
+tst (sp)+ ; Popping the no longer needed board from stack.
 rts pc
 ; --- END OF STOP TERMS ---
 
@@ -156,8 +171,9 @@ jmp White ; If the color is white, branch to White.
 jBlack:
   jmp Black
 
-; This method will check legal moves of all white pieces and add 1 to NumMoves each time a legal move is found.
-; r2- current cell address.
+; This method will check legal moves of all white pieces and calls the reccursive
+; function each time a legal move is found.
+; r2 - Will store the current checked cell address.
 ; r3 - temporary row index (will be used once for another calculation).
 ; r5 - temporary column index (will be used once for another calculation).
 White:
@@ -185,15 +201,17 @@ cmp -14.(r2), #2 ; Checking if the upper right piece is black.
 beq EatRW ; If the upper right piece is black, check if the white piece can eat it.
 
 ; --- WHITE CAN MOVE RIGHT ---
-; Inserting new location of the white piece to stack
+; Current white piece can move to the right.
+; Preparing for the Call:
+; Inserting new location of the white piece to stack:
 mov r2, -(sp)
 sub #14., (sp)
-; No eaten piece. Inserting 0.
+; No eaten piece. Inserting 0:
 mov #0, -(sp)
-; Makes the move
+; Makes the move:
 jsr pc, WhiteMov
-add #4., sp
-jmp LeftW
+add #4., sp ; Popping unnecessary items from stack.
+jmp LeftW ; Go to check if this piece can also move to the left.
 
 ; --- WHITE EAT RIGHT ---
 ; Checks if white piece can eat to the right.
@@ -209,16 +227,18 @@ cmp -28.(r2), #0 ; Checking if the cell is empty.
 bne LeftW ; If the cell is not empty, cannot eat. Check legal moves to the left.
 
 ; --- WHITE CAN EAT RIGHT ---
-; Inserting new location of the white piece to stack
+; Current white piece can eat to the right.
+; Preparing for the Call:
+; Inserting new location of the white piece to stack:
 mov r2, -(sp)
 sub #28., (sp)
 ; Inserting location of eaten piece.
 mov r2, -(sp)
 sub #14., (sp)
-; Makes the move
+; Makes the move:
 jsr pc, WhiteMov
-add #4., sp
-jmp LeftW
+add #4., sp ; Popping unnecessary items from stack.
+jmp LeftW ; Go to check if this piece can also move to the left.
 
 ; --- WHITE MOVE LEFT ---
 ; Checks if white piece can move left.
@@ -235,15 +255,17 @@ cmp -18.(r2), #2 ; Checking if the upper left piece is black.
 beq EatLW ; If the upper left piece is black, Check if the white piece can eat it.
 
 ; --- WHITE CAN MOVE LEFT ---
-; Inserting new location of the white piece to stack
+; Current white piece can move to the left.
+; Preparing for the Call:
+; Inserting new location of the white piece to stack:
 mov r2, -(sp)
 sub #18., (sp)
 ; No eat. Inserting 0.
 mov #0., -(sp)
-; Makes the move
+; Makes the move:
 jsr pc, WhiteMov
 add #4., sp
-jmp NextCell
+jmp NextCell ; Current white piece cannot move anymore. Go to check next cell.
 
 ; --- WHITE EAT LEFT ---
 ; Checks if white piece can eat to the left.
@@ -260,16 +282,18 @@ cmp -36.(r2), #0 ; Checking if the cell is empty.
 bne NextCell ;If the cell is not empty, cannot eat. Skip to the next cell.
 
 ; --- WHITE CAN EAT LEFT ---
-; Inserting new location of the white piece to stack
+; Current white piece can eat to the left.
+; Preparing for the Call:
+; Inserting new location of the white piece to stack:
 mov r2, -(sp)
 sub #36., (sp)
 ; Inserting location of eaten piece.
 mov r2, -(sp)
 sub #18., (sp)
-; Makes the move
+; Makes the move:
 jsr pc, WhiteMov
-add #4., sp
-jmp NextCell
+add #4., sp ; Popping unnecessary items from stack.
+jmp NextCell ; Current white piece cannot move anymore. Go to check next cell.
 
 End: ;If we got here we checked all the cells of the array.
 rts pc
@@ -297,9 +321,9 @@ jmp White
 jNxtCell:
   jmp NextCell
 
-;This method will check legal moves of all black pieces and add 1 to NumMoves
-;each time a legal move is found.
-; r2- current cell address.
+; This method will check legal moves of all black pieces and calls the reccursive
+; function each time a legal move is found.
+; r2 - Will store the current checked cell address.
 ; r3 - temporary row index (will be used once for another calculation).
 ; r5 - temporary column index (will be used once for another calculation).
 Black:
@@ -328,15 +352,17 @@ beq EatLB ; If the lower right piece is white, check if the black piece can eat 
 
 
 ; --- BLACK CAN MOVE LEFT ---
-; Inserting new location of the white piece to stack
+; Current black piece can move to the left.
+; Preparing for the Call:
+; Inserting new location of the white piece to stack:
 mov r2, -(sp)
 add #18., (sp)
-; No eaten piece. Inserting 0.
+; No eaten piece. Inserting 0:
 mov #0, -(sp)
-; Makes the move
+; Makes the move:
 jsr pc, BlackMov
-add #4., sp
-jmp RightB
+add #4., sp ; Popping unnecessary items from stack.
+jmp RightB ; Go to check if current black piece can move to the right.
 
 ; --- BLACK EAT LEFT ---
 ; Checks if black piece can eat to the left.
@@ -352,13 +378,15 @@ cmp 36.(r2), #0 ; Checking if the cell is empty.
 bne RightB ; If the cell is not empty, cannot eat. Check legal moves to the right.
 
 ; --- BLACK CAN EAT LEFT ---
+; Current black piece can move to the left.
+; Preparing for the Call:
 ; Inserting new location of the white piece to stack
 mov r2, -(sp)
 add #36., (sp)
 ; Inserting location of eaten piece.
 mov r2, -(sp)
 add #18., (sp)
-; Makes the move
+; Makes the move:
 jsr pc, BlackMov
 add #4., sp
 jmp RightB
@@ -383,7 +411,7 @@ mov r2, -(sp)
 add #14., (sp)
 ; No eaten piece. Inserting 0.
 mov #0, -(sp)
-; Makes the move
+; Makes the move:
 jsr pc, BlackMov
 add #4., sp
 jmp NextCell
@@ -406,7 +434,7 @@ add #28., (sp)
 ; Inserting location of eaten piece.
 mov r2, -(sp)
 add #14., (sp)
-; Makes the move
+; Makes the move:
 jsr pc, BlackMov
 add #4., sp
 jmp NextCell
