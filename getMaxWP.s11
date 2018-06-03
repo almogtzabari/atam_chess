@@ -165,7 +165,7 @@ blt NextCell ; If column index is less than 0, cannot move right, skip to the ne
 cmp -18.(r2), #1 ; Checking if the upper left piece is white.
 beq NextCell ; If the upper left piece is white, cannot move there, skip to the next cell.
 cmp -18.(r2), #2 ; Checking if the upper left piece is black.
-beq NextCell ; If the upper left piece is black, Check if the white piece can eat it.
+beq EatLW ; If the upper left piece is black, Check if the white piece can eat it.
 
 ; --- WHITE CAN MOVE LEFT ---
 ; Inserting new location of the white piece to stack
