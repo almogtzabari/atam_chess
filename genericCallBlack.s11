@@ -130,3 +130,5 @@ chngMinB: ; Changing maximum to minimum.
           beq nSrcDstB ; No eat. We don't need to restore. No need to update src and dst.
           mov #1., @2.(sp) ; Restoring eaten white piece.
           br nSrcDstB ; No need to update src and dst.
+
+; END OF BlackMov

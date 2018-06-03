@@ -42,7 +42,7 @@ getWPRec:
 mov #Board, -(sp) ; Moving board adress to stack.
 ; Pushing to stack the last player to make a move.
 mov #3, -(sp)
-sub 6(sp), (sp) ; Moving current player to the top of the stack.
+sub 8.(sp), (sp) ; Moving current player to the top of the stack.
 mov #0, -(sp) ; checkWin Output will be written to here.
 
 jsr pc, checkWin ; CheckWin will use the place allocted for r0 in the stack for output.
