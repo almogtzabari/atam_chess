@@ -35,7 +35,7 @@ mov (sp)+, r0
 add #4, sp
 rts pc
 
-
+;
 getWPRec:
 ; --- STOP TERMS ---
 ; Preparing to call for checkWin with the previous player (last player to move).
