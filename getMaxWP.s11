@@ -22,8 +22,8 @@ mov Steps, -(sp) ; Pushing number of steps to stack.
 jsr pc, getWPRec ;
 
 ; Recursive function finished
-; Popping unnecessary items from stack and writing output to given labels:
-add #6, sp ; Popping unnecessary items from stack.
+; Popping unnecessary data from stack and writing output to given labels:
+add #6, sp ; Popping unnecessary data from stack.
 mov (sp)+, @6.(sp) ; Writing the best wp to WP label.
 ; SrcPos and DstPos returned as address of the board.
 ; Translating the addresses of DstPos to index:
@@ -125,7 +125,7 @@ bgt noUp ; Jumps if we don't need to update.
 mov 6.(sp), 20.(sp) ; Updating father's wp.
 mov 8.(sp), 22.(sp) ; Updating father's DstPos.
 mov 10.(sp), 24.(sp) ; Updating father's SrcPos.
-add #12., sp ; Popping unnecessary items from stack.
+add #12., sp ; Popping unnecessary data from stack.
 rts pc
 
 wasMax:
@@ -136,12 +136,12 @@ ble noUp ; Jumps if we don't need to update.
 mov 6.(sp), 20.(sp) ; Updating father's wp.
 mov 8.(sp), 22.(sp) ; Updating father's DstPos.
 mov 10.(sp), 24.(sp) ; Updating father's SrcPos.
-add #12., sp ; Popping unnecessary items from stack.
+add #12., sp ; Popping unnecessary data from stack.
 rts pc
 
 noUp:
 ; If we got here we do not need to update.
-add #12., sp ; Popping unnecessary items from stack.
+add #12., sp ; Popping unnecessary data from stack.
 rts pc
 
 whoWon:
@@ -210,7 +210,7 @@ sub #14., (sp)
 mov #0, -(sp)
 ; Makes the move:
 jsr pc, WhiteMov
-add #4., sp ; Popping unnecessary items from stack.
+add #4., sp ; Popping unnecessary data from stack.
 jmp LeftW ; Go to check if this piece can also move to the left.
 
 ; --- WHITE EAT RIGHT ---
@@ -237,7 +237,7 @@ mov r2, -(sp)
 sub #14., (sp)
 ; Makes the move:
 jsr pc, WhiteMov
-add #4., sp ; Popping unnecessary items from stack.
+add #4., sp ; Popping unnecessary data from stack.
 jmp LeftW ; Go to check if this piece can also move to the left.
 
 ; --- WHITE MOVE LEFT ---
@@ -260,7 +260,7 @@ beq EatLW ; If the upper left piece is black, Check if the white piece can eat i
 ; Inserting new location of the white piece to stack:
 mov r2, -(sp)
 sub #18., (sp)
-; No eat. Inserting 0.
+; No eat. Inserting 0:
 mov #0., -(sp)
 ; Makes the move:
 jsr pc, WhiteMov
@@ -287,17 +287,16 @@ bne NextCell ;If the cell is not empty, cannot eat. Skip to the next cell.
 ; Inserting new location of the white piece to stack:
 mov r2, -(sp)
 sub #36., (sp)
-; Inserting location of eaten piece.
+; Inserting location of eaten piece:
 mov r2, -(sp)
 sub #18., (sp)
 ; Makes the move:
 jsr pc, WhiteMov
-add #4., sp ; Popping unnecessary items from stack.
+add #4., sp ; Popping unnecessary data from stack.
 jmp NextCell ; Current white piece cannot move anymore. Go to check next cell.
 
 End: ;If we got here we checked all the cells of the array.
 rts pc
-
 
 ; This method will skip to the next cell by adding 1 to column index. If column
 ; index is bigger than 7 sets it to 0 and adds 1 to row index.
@@ -361,7 +360,7 @@ add #18., (sp)
 mov #0, -(sp)
 ; Makes the move:
 jsr pc, BlackMov
-add #4., sp ; Popping unnecessary items from stack.
+add #4., sp ; Popping unnecessary data from stack.
 jmp RightB ; Go to check if current black piece can move to the right.
 
 ; --- BLACK EAT LEFT ---
@@ -380,15 +379,15 @@ bne RightB ; If the cell is not empty, cannot eat. Check legal moves to the righ
 ; --- BLACK CAN EAT LEFT ---
 ; Current black piece can move to the left.
 ; Preparing for the Call:
-; Inserting new location of the white piece to stack
+; Inserting new location of the white piece to stack:
 mov r2, -(sp)
 add #36., (sp)
-; Inserting location of eaten piece.
+; Inserting location of eaten piece:
 mov r2, -(sp)
 add #18., (sp)
 ; Makes the move:
 jsr pc, BlackMov
-add #4., sp
+add #4., sp ; Popping unnecessary data from stack.
 jmp RightB
 
 ; --- BLACK MOVE RIGHT ---
@@ -406,15 +405,17 @@ cmp 14.(r2), #1 ; Checking if the lower left piece is white.
 beq EatRB ; If the lower left piece is white, check if the black piece can eat it.
 
 ; --- BLACK CAN MOVE RIGHT ---
-; Inserting new location of the white piece to stack
+; Current black piece can move to the right.
+; Preparing for the Call:
+; Inserting new location of the white piece to stack:
 mov r2, -(sp)
 add #14., (sp)
-; No eaten piece. Inserting 0.
+; No eaten piece. Inserting 0:
 mov #0, -(sp)
 ; Makes the move:
 jsr pc, BlackMov
-add #4., sp
-jmp NextCell
+add #4., sp ; Popping unnecessary data from stack.
+jmp NextCell ; Current black piece cannot move anymore. Go to next cell.
 
 EatRB:
 sub #1, r5 ; Reducing column index by 1.
@@ -427,30 +428,32 @@ bgt NextCell ; If r3 is bigger than 7, cannot eat (out of bounds). Skip to the n
 cmp 28.(r2), #0 ; Checking if the cell is empty.
 bne jNxtCell ;If the cell is not empty, cannot eat. Skip to the next cell.
 
-; --- BLACK EAT RIGHT ---
-; Inserting new location of the white piece to stack
+; --- BLACK CAN EAT RIGHT ---
+; Current black piece can eat to the right.
+; Preparing for the Call:
+; Inserting new location of the white piece to stack:
 mov r2, -(sp)
 add #28., (sp)
-; Inserting location of eaten piece.
+; Inserting location of eaten piece:
 mov r2, -(sp)
 add #14., (sp)
 ; Makes the move:
 jsr pc, BlackMov
-add #4., sp
-jmp NextCell
+add #4., sp ; Popping unnecessary data from stack.
+jmp NextCell ; Current black piece cannot move anymore. Go to next cell.
 
 
-;This method checks if a given board is in a winning state for the given player.
-;Input -
-; - A number of player to check - will be stored in 4(sp).
-; - A label of the beggining of the board - will be stored in 6(sp).
-;Output -
-; - (-1) if the current player didn't win, 1 if the current player wins - will be stored in 2(sp).
+; This method checks if a given board is in a winning state for the given player.
+; Input:
+; 1. A number of player to check - will be stored in 4(sp).
+; 2. A label of the beginning of the board - will be stored in 6(sp).
+; Output:
+; -1 if the current player didn't win, 1 if the current player wins - will be stored in 2(sp).
 checkWin:
-tst -(sp) ; Allocating place for number of white pieces.
-tst -(sp) ; Allocating place for number of black pieces.
+tst -(sp) ; Allocating place for number of white pieces (output of countWB).
+tst -(sp) ; Allocating place for number of black pieces (output of countWB).
 mov 12(sp), -(sp) ; Copying board adress to the top of the stack.
-jsr pc, countWB
+jsr pc, countWB ; Counting number of pieces from each color and puts it in stack.
 tst (sp)+ ; Pop board adress.
 cmp 10(sp), #1 ; Check if the current player is white.
 bne checkb ; Branch to checkb if the current player is black.
@@ -503,22 +506,22 @@ tst (sp)+ ; Pop number of black pieces.
 tst (sp)+ ; Pop number of white pieces.
 mov #-1., 2(sp)
 rts pc
-
 ; END OF checkWin
 
+; This method will calculate the winning parameter of a given board.
 ; Input:
 ; 1. Label of the current board status - will be stored at 4(sp).
 ; 2. Current player's turn (1-white,2-black) - will be stored at 2(sp).
 ; Output:
 ; Winning parameter - will be stored at R4.
 calcWP:
-mov 0, -(sp) ; Leaving blank space for output.
-mov 0, -(sp) ; Leaving blank space for output.
+mov 0, -(sp) ; Leaving blank space for output of countWB.
+mov 0, -(sp) ; Leaving blank space for output of countWB.
 mov 8(sp), -(sp) ; Giving the label of the board as input.
-jsr pc, countWB ; Counter number of vessels from each color.
+jsr pc, countWB ; Counting number of pieces from each color.
 add #2, sp ; Popping the no longer needed board label from stack.
 cmp 6(sp), #2
-beq WPforW ; if current player (input) is white - go to WPforW
+beq WPforW ; if current player (input) is black - go to WPforW
 ; If we got here then the current player is black. It means that
 ; the last player to move was white.
 mov 2(sp), r4 ; r4 = number of white vessels.
@@ -531,9 +534,8 @@ mov (sp), r4 ; r4 = number of black vessels.
 sub 2(sp), r4 ; r4 = r4 - number of white players.
 br endCalWP ; Jumping to the end of the method.
 endCalWP:
-add #4, sp ; popping 2 items from stack (counters of W&B vessles)
+add #4, sp ; popping 2 items from stack (counters of W&B pieces)
 rts pc
-
 ; END OF calcWP
 
 ; ----- HELPING FUNCTIONS -----
@@ -542,8 +544,12 @@ rts pc
 ; 3. countWB
 ; 4. moveChk
 
+; This method is doing the moving of a piece and calls the reccursive function.
+; Input:
+; 1. Address of piece to move.
+; 2. Address of eaten piece. If it is not an eat the value will be 0.
 WhiteMov:
-; Making the move of the white player.
+; Making the move of the white player:
 mov #1, @4.(sp) ; Moving white piece to the new place.
 mov #0, (r2) ; Removing white piece from the last place it was.
 
