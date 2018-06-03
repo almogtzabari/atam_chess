@@ -82,10 +82,11 @@ chkMoves:
 clr r0 ; Sets r0 to 0.
 clr r1 ; Sets r1 to 0.
 cmp 4(sp), #1 ; Checking if the current color is white.
-bne Black ; If the color is not white, branch to Black.
+bne jBlack ; If the color is not white, branch to Black.
 jmp White ; If the color is white, branch to White.
 
-
+jBlack:
+  jmp Black
 
 ; This method will check legal moves of all white pieces and add 1 to NumMoves each time a legal move is found.
 ; r2- current cell address.
@@ -225,7 +226,8 @@ cmp 4(sp), #1
 bne Black
 jmp White
 
-
+jNxtCell:
+  jmp NextCell
 
 ;This method will check legal moves of all black pieces and add 1 to NumMoves
 ;each time a legal move is found.
@@ -327,7 +329,7 @@ cmp r3, #7
 bgt NextCell ; If r3 is bigger than 7, cannot eat (out of bounds). Skip to the next cell.
 ;If we got here, the cell which the current white piece should be placed after eating is in the board bounds, Check if it is empty.
 cmp 28.(r2), #0 ; Checking if the cell is empty.
-bne NextCell ;If the cell is not empty, cannot eat. Skip to the next cell.
+bne jNxtCell ;If the cell is not empty, cannot eat. Skip to the next cell.
 
 ; --- BLACK EAT RIGHT ---
 ; Inserting new location of the white piece to stack
