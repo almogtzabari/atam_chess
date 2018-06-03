@@ -52,6 +52,7 @@ beq whoWon ; If last player wins - jumps.
 
 ; Checks if the current player wins.
 mov 8.(sp), (sp) ; Moving current player to the top of the stack.
+mov #0, -(sp) ; checkWin Output will be written to here.
 jsr pc, checkWin ; CheckWin will use the place allocted for r0 in the stack for output.
 cmp #1, (sp)+ ; Pop the return value of checkWin and check which player won.
 beq whoWon ; If current player wins - jumps.

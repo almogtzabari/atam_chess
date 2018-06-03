@@ -1,0 +1,1090 @@
+Technion Computer Science Department -- PDP/11 X-Assembler Version (5.5) AA.
+
+
+	S O U R C E    F I L E    :    getMaxWP.s11
+	===========================================
+
+                                   1     
+000000                             2     .=torg+1000
+001000                             3     main:
+001000   012706 001000             4     mov #main, sp
+001004   012746 007206             5     mov #SrcPos, -(sp)
+001010   012746 007210             6     mov #DstPos, -(sp)
+001014   012746 007204             7     mov #WP, -(sp)
+001020   004767 000002             8     jsr pc, getMaxWP
+001024   000000                    9     halt
+                                  10     
+001026                            11     getMaxWP:
+001026   012746 000000            12     mov #0, -(sp) ; Allocating source position.
+001032   012746 000000            13     mov #0, -(sp) ; Allocating destenation position.
+001036   012746 177634            14     mov #-100., -(sp) ; Allocating place for WP.
+001042   012746 000001            15     mov #1, -(sp) ;  Maximum for the first player.
+001046   016746 006126            16     mov Player, -(sp) ; Moving the player we check for to the stack.
+001052   016746 006124            17     mov Steps, -(sp) ; Moving number of steps to stack.
+001056   004767 000074            18     jsr pc, getWPRec
+001062   062706 000006            19     add #6, sp
+001066   012676 000006            20     mov (sp)+, @6.(sp) ; Writing the best wp to WinParam label.
+001072   162716 007000            21     sub #Board, (sp) ;
+001076   010046                   22     mov r0, -(sp)
+001100   010146                   23     mov r1, -(sp)
+001102   005000                   24     clr r0
+001104   016601 000004            25     mov 4(sp), r1
+001110   071027 000002            26     div #2, r0
+001114   010076 000014            27     mov r0, @12.(sp)
+001120   005000                   28     clr r0
+001122   162766 007000 000006     29     sub #Board, 6(sp)
+001130   016601 000006            30     mov 6(sp), r1
+001134   071027 000002            31     div #2, r0
+001140   010076 000016            32     mov r0, @14.(sp)
+001144   012601                   33     mov (sp)+, r1
+001146   012600                   34     mov (sp)+, r0
+001150   062706 000004            35     add #4, sp
+001154   000207                   36     rts pc
+                                  37     
+                                  38     
+001156                            39     getWPRec:
+                                  40     ; --- STOP TERMS ---
+                                  41     ; Preparing to call for checkWin with the previous player (last player to move).
+001156   012746 007000            42     mov #Board, -(sp) ; Moving board adress to stack.
+                                  43     ; Pushing to stack the last player to make a move.
+001162   012746 000003            44     mov #3, -(sp)
+001166   166616 000010            45     sub 8.(sp), (sp) ; Moving current player to the top of the stack.
+001172   012746 000000            46     mov #0, -(sp) ; checkWin Output will be written to here.
+                                  47     
+                                  48     ; Checks if the last player to make a move wins.
+001176   004767 001172            49     jsr pc, checkWin ; CheckWin will use the place allocted for r0 in the stack for output.
+001202   022726 000001            50     cmp #1, (sp)+ ; Pop the return value of checkWin and check which player won.
+001206   001427                   51     beq whoWon ; If last player wins - jumps.
+                                  52     
+                                  53     ; Checks if the current player wins.
+001210   016616 000010            54     mov 8.(sp), (sp) ; Moving current player to the top of the stack.
+001214   004767 001154            55     jsr pc, checkWin ; CheckWin will use the place allocted for r0 in the stack for output.
+001220   022726 000001            56     cmp #1, (sp)+ ; Pop the return value of checkWin and check which player won.
+001224   001420                   57     beq whoWon ; If current player wins - jumps.
+                                  58     
+                                  59     ; If we got here no one won.
+001226   062706 000004            60     add #4, sp ; Pop the other player and board from the stack.
+001232   005766 000002            61     tst 2(sp) ; Check if the current number of steps is 0.
+001236   001030                   62     bne chkMoves
+                                  63     
+                                  64     ; If we got here steps is 0.
+001240   012746 007000            65     mov #Board, -(sp) ; Moving board adress to stack.
+                                  66     ;mov 6(sp), -(sp) ; Moving current player to the top of the stack.
+001244   016746 005730            67     mov Player, -(sp) ; Moving current player to the top of the stack.
+001250   004767 001322            68     jsr pc, calcWP ; Output will be at r4.
+001254   062706 000004            69     add #4, sp
+001260   010466 000010            70     mov r4, 8.(sp) ; Copying calculated wp from r4 to the fathers wp.
+001264   000207                   71     rts pc
+                                  72     
+001266                            73     whoWon:
+001266   022667 005706            74     cmp (sp)+, Player ; Check if the current player is the same as found in label Player.
+001272   001005                   75     bne playerLos
+                                  76     ; The player who won is the player we check
+001274   012766 000024 000012     77     mov #20., 10.(sp)
+001302   005726                   78     tst (sp)+
+001304   000207                   79     rts pc
+001306                            80     playerLos:
+                                  81     ;The player who won is not the player we check.
+001306   012766 177754 000012     82     mov #-20., 10.(sp)
+001314   005726                   83     tst (sp)+
+001316   000207                   84     rts pc
+                                  85     ; --- END OF STOP TERMS ---
+                                  86     
+                                  87     ; r0 - Current row index.
+                                  88     ; r1 - Current column index.
+001320                            89     chkMoves:
+001320   005000                   90     clr r0 ; Sets r0 to 0.
+001322   005001                   91     clr r1 ; Sets r1 to 0.
+001324   026627 000004 000001     92     cmp 4(sp), #1 ; Checking if the current color is white.
+001332   001002                   93     bne jBlack ; If the color is not white, branch to Black.
+001334   000167 000004            94     jmp White ; If the color is white, branch to White.
+                                  95     
+001340                            96     jBlack:
+001340   000167 000440            97       jmp Black
+                                  98     
+                                  99     ; This method will check legal moves of all white pieces and add 1 to NumMoves each time a legal move is found.
+                                 100     ; r2- current cell address.
+                                 101     ; r3 - temporary row index (will be used once for another calculation).
+                                 102     ; r5 - temporary column index (will be used once for another calculation).
+001344                           103     White:
+001344   010003                  104     mov r0, r3  ; Putting index of the current row in r3.
+001346   010105                  105     mov r1, r5  ; Putting index of the current column in r5.
+001350   012702 007000           106     mov #Board, r2 ; Putting board array starting index in r2.
+001354   070327 000020           107     mul #16., r3 ; Multiplying the number of row by 16 (decimal) (length of each row in bytes).
+001360   070527 000002           108     mul #2, r5 ; Multiplying the number of column by 2 (decimal) (width of each column in bytes).
+001364   060302                  109     add r3, r2 ; Adding the number of bytes needed in order to point to the beginning of a row.
+001366   060502                  110     add r5, r2 ; Adding the number of bytes needed in order to point a cell in a row.
+                                 111     ; r2 will now contain the address of the current cell.
+001370   021227 000001           112     cmp (r2), #1 ; Checking if the current piece is white.
+001374   001160                  113     bne NextCell ; If the color of the current piece is not white skip to the next cell.
+001376   010003                  114     mov r0, r3 ; Setting r3 to the current row index (after changing it earlier).
+001400   162703 000001           115     sub #1, r3 ; Reducing row index by 1.
+001404   020327 000000           116     cmp r3, #0
+001410   002552                  117     blt NextCell ; If row index is less than 0, cannot move at all, skip to the next cell.
+001412   010105                  118     mov r1, r5 ; Setting r5 to the current column index (after changing it eariler).
+001414   062705 000001           119     add #1, r5 ; Increasing column index by 1.
+001420   020527 000007           120     cmp r5, #7
+001424   003055                  121     bgt LeftW ; If column index is bigger than 7, the current piece cannot move right, check legal moves to the left.
+001426   026227 177762 000001    122     cmp -14.(r2), #1 ; Checking if the upper right piece is white.
+001434   001451                  123     beq LeftW ; If the upper right piece is white, cannot go there, check legal moves to the left.
+001436   026227 177762 000002    124     cmp -14.(r2), #2 ; Checking if the upper right piece is black.
+001444   001413                  125     beq EatRW ; If the upper right piece is black, check if the white piece can eat it.
+                                 126     
+                                 127     ; --- WHITE CAN MOVE RIGHT ---
+                                 128     ; Inserting new location of the white piece to stack
+001446   010246                  129     mov r2, -(sp)
+001450   162716 000016           130     sub #14., (sp)
+                                 131     ; No eaten piece. Inserting 0.
+001454   012746 000000           132     mov #0, -(sp)
+                                 133     ; Makes the move
+001460   004767 001174           134     jsr pc, WhiteMov
+001464   062706 000004           135     add #4., sp
+001470   000167 000064           136     jmp LeftW
+                                 137     
+                                 138     ; --- WHITE EAT RIGHT ---
+                                 139     ; Checks if white piece can eat to the right.
+001474                           140     EatRW:
+001474   162703 000001           141     sub #1, r3 ; Reducing row index by 1.
+001500   020327 000000           142     cmp r3, #0
+001504   002425                  143     blt LeftW ; If r3 is less than 0, cannot eat (out of bounds). Check legal moves to the left.
+001506   062705 000001           144     add #1, r5 ;Increasing column index by 1.
+001512   020527 000007           145     cmp r5, #7
+001516   003020                  146     bgt LeftW ; If column index is bigger than 7, cannot eat (out of bounds). Check legal moves to the left.
+                                 147     ;If we got here, the cell which the current white piece should be placed after eating is in the board bounds, we need to check if it is empty.
+001520   026227 177744 000000    148     cmp -28.(r2), #0 ; Checking if the cell is empty.
+001526   001014                  149     bne LeftW ; If the cell is not empty, cannot eat. Check legal moves to the left.
+                                 150     
+                                 151     ; --- WHITE CAN EAT RIGHT ---
+                                 152     ; Inserting new location of the white piece to stack
+001530   010246                  153     mov r2, -(sp)
+001532   162716 000034           154     sub #28., (sp)
+                                 155     ; Inserting location of eaten piece.
+001536   010246                  156     mov r2, -(sp)
+001540   162716 000016           157     sub #14., (sp)
+                                 158     ; Makes the move
+001544   004767 001110           159     jsr pc, WhiteMov
+001550   062706 000004           160     add #4., sp
+001554   000167 000000           161     jmp LeftW
+                                 162     
+                                 163     ; --- WHITE MOVE LEFT ---
+                                 164     ; Checks if white piece can move left.
+001560                           165     LeftW:
+001560   010003                  166     mov r0, r3 ; Putting index of the current row in r3.
+001562   162703 000001           167     sub #1, r3 ; Reducing row index by 1.
+001566   010105                  168     mov r1, r5 ; Putting index of the current column in r5.
+001570   162705 000001           169     sub #1, r5 ; Reducing column index by 1.
+001574   020527 000000           170     cmp r5, #0
+001600   002456                  171     blt NextCell ; If column index is less than 0, cannot move right, skip to the next cell.
+001602   026227 177756 000001    172     cmp -18.(r2), #1 ; Checking if the upper left piece is white.
+001610   001452                  173     beq NextCell ; If the upper left piece is white, cannot move there, skip to the next cell.
+001612   026227 177756 000002    174     cmp -18.(r2), #2 ; Checking if the upper left piece is black.
+001620   001413                  175     beq EatLW ; If the upper left piece is black, Check if the white piece can eat it.
+                                 176     
+                                 177     ; --- WHITE CAN MOVE LEFT ---
+                                 178     ; Inserting new location of the white piece to stack
+001622   010246                  179     mov r2, -(sp)
+001624   162716 000022           180     sub #18., (sp)
+                                 181     ; No eat. Inserting 0.
+001630   012746 000000           182     mov #0., -(sp)
+                                 183     ; Makes the move
+001634   004767 001020           184     jsr pc, WhiteMov
+001640   062706 000004           185     add #4., sp
+001644   000167 000066           186     jmp NextCell
+                                 187     
+                                 188     ; --- WHITE EAT LEFT ---
+                                 189     ; Checks if white piece can eat to the left.
+001650                           190     EatLW:
+001650   162705 000001           191     sub #1, r5 ; Reducing column index by 1.
+001654   020527 000000           192     cmp r5, #0
+001660   002426                  193     blt NextCell ; If column index is less than 0, cannot eat, skip to the next cell.
+001662   162703 000001           194     sub #1, r3 ; Reducing row index by 1.
+001666   020327 000000           195     cmp r3, #0
+001672   002421                  196     blt NextCell ; If r3 is less than 0, cannot eat (out of bounds). Skip to the next cell.
+                                 197     ;If we got here, the cell which the current white piece should be
+                                 198     ;placed in after eating is in the board bounds, Check if it is empty.
+001674   026227 177734 000000    199     cmp -36.(r2), #0 ; Checking if the cell is empty.
+001702   001015                  200     bne NextCell ;If the cell is not empty, cannot eat. Skip to the next cell.
+                                 201     
+                                 202     ; --- WHITE CAN EAT LEFT ---
+                                 203     ; Inserting new location of the white piece to stack
+001704   010246                  204     mov r2, -(sp)
+001706   162716 000044           205     sub #36., (sp)
+                                 206     ; Inserting location of eaten piece.
+001712   010246                  207     mov r2, -(sp)
+001714   162716 000022           208     sub #18., (sp)
+                                 209     ; Makes the move
+001720   004767 000734           210     jsr pc, WhiteMov
+001724   062706 000004           211     add #4., sp
+001730   000167 000002           212     jmp NextCell
+                                 213     
+001734                           214     End: ;If we got here we checked all the cells of the array.
+001734   000207                  215     rts pc
+                                 216     
+                                 217     
+                                 218     ; This method will skip to the next cell by adding 1 to column index. If column
+                                 219     ; index is bigger than 7 sets it to 0 and adds 1 to row index.
+                                 220     ; r0 - Current row index.
+                                 221     ; r1 - Current column index.
+001736                           222     NextCell:
+001736   062701 000001           223     add #1, r1 ; Increasing column index by 1.
+001742   020127 000010           224     cmp r1, #8 ; Checking if reached the end of the row.
+001746   002406                  225     blt InRange ; Branch to InRange if the index of column is legal.
+001750   005001                  226     clr r1 ; If we got here index of column reached the end of row. Sets it to 0.
+001752   062700 000001           227     add #1, r0 ; Go to the next row.
+001756   020027 000007           228     cmp r0, #7
+001762   003364                  229     bgt End ; If index of row is bigger than 7 we reached the end of the board.
+                                 230     
+                                 231     ;Continues to the next cell once its indexes are valid.
+001764                           232     InRange:
+001764   026627 000004 000001    233     cmp 4(sp), #1
+001772   001004                  234     bne Black
+001774   000167 177344           235     jmp White
+                                 236     
+002000                           237     jNxtCell:
+002000   000167 177732           238       jmp NextCell
+                                 239     
+                                 240     ;This method will check legal moves of all black pieces and add 1 to NumMoves
+                                 241     ;each time a legal move is found.
+                                 242     ; r2- current cell address.
+                                 243     ; r3 - temporary row index (will be used once for another calculation).
+                                 244     ; r5 - temporary column index (will be used once for another calculation).
+002004                           245     Black:
+002004   010003                  246     mov r0, r3  ; Putting index of the current row in r3.
+002006   010105                  247     mov r1, r5  ; Putting index of the current column in r5.
+002010   012702 007000           248     mov #Board, r2 ; Putting board array starting index in r2.
+002014   070327 000020           249     mul #16., r3 ; Multiplying the number of row by 16 (decimal) (length of each row in bytes).
+002020   070527 000002           250     mul #2, r5 ; Multiplying the number of column by 2 (decimal) (width of each column in bytes).
+002024   060302                  251     add r3, r2 ;Adding the number of bytes needed in order to point to the beginning of a row.
+002026   060502                  252     add r5, r2 ; Adding the number of bytes needed in order to point a cell in a row.
+                                 253     ; r2 will now contain the address of the current cell.
+002030   021227 000002           254     cmp (r2), #2 ; Checking if the current piece is black.
+002034   001340                  255     bne NextCell ; If the color of the current piece is not black skip to the next cell.
+002036   010003                  256     mov r0, r3 ; Putting index of the current row in r3.
+002040   062703 000001           257     add #1, r3 ; Increasing row index by 1.
+002044   020327 000007           258     cmp r3, #7
+002050   003332                  259     bgt NextCell ; If row index is bigger than 7, cannot move at all, skip to the next cell.
+002052   010105                  260     mov r1, r5 ; Setting r5 to the current column index (after changing it eariler).
+002054   062705 000001           261     add #1, r5 ; Increasing column index by 1.
+002060   020527 000007           262     cmp r5, #7
+002064   003055                  263     bgt RightB ; If column index is bigger than 7, the current piece cannot move left, Check legal moves to the right.
+002066   026227 000022 000002    264     cmp 18.(r2), #2 ; Checking if the lower right piece is black.
+002074   001451                  265     beq RightB ; If the lower left piece is black, cannot go there, Check legal moves to the right.
+002076   026227 000022 000001    266     cmp 18.(r2), #1 ; Checking if the lower right piece is black.
+002104   001413                  267     beq EatLB ; If the lower right piece is white, check if the black piece can eat it.
+                                 268     
+                                 269     
+                                 270     ; --- BLACK CAN MOVE LEFT ---
+                                 271     ; Inserting new location of the white piece to stack
+002106   010246                  272     mov r2, -(sp)
+002110   062716 000022           273     add #18., (sp)
+                                 274     ; No eaten piece. Inserting 0.
+002114   012746 000000           275     mov #0, -(sp)
+                                 276     ; Makes the move
+002120   004767 001126           277     jsr pc, BlackMov
+002124   062706 000004           278     add #4., sp
+002130   000167 000064           279     jmp RightB
+                                 280     
+                                 281     ; --- BLACK EAT LEFT ---
+                                 282     ; Checks if black piece can eat to the left.
+002134                           283     EatLB:
+002134   062703 000001           284     add #1, r3 ; Increasing row index by 1.
+002140   020327 000007           285     cmp r3, #7 ; If r3 is bigger than 7, cannot eat (out of bounds). Check legal moves to the right.
+002144   003025                  286     bgt RightB
+002146   062705 000001           287     add #1, r5 ;Increasing column index by 1.
+002152   020527 000007           288     cmp r5, #7
+002156   003020                  289     bgt RightB ; If column index is bigger than 7, cannot eat (out of bounds). Check legal moves to the right.
+                                 290     ;If we got here, the cell which the current black piece should be placed after eating is in the board bounds, we need to check if it is empty.
+002160   026227 000044 000000    291     cmp 36.(r2), #0 ; Checking if the cell is empty.
+002166   001014                  292     bne RightB ; If the cell is not empty, cannot eat. Check legal moves to the right.
+                                 293     
+                                 294     ; --- BLACK CAN EAT LEFT ---
+                                 295     ; Inserting new location of the white piece to stack
+002170   010246                  296     mov r2, -(sp)
+002172   062716 000044           297     add #36., (sp)
+                                 298     ; Inserting location of eaten piece.
+002176   010246                  299     mov r2, -(sp)
+002200   062716 000022           300     add #18., (sp)
+                                 301     ; Makes the move
+002204   004767 001042           302     jsr pc, BlackMov
+002210   062706 000004           303     add #4., sp
+002214   000167 000000           304     jmp RightB
+                                 305     
+                                 306     ; --- BLACK MOVE RIGHT ---
+                                 307     ; Checking if black piece can move right.
+002220                           308     RightB:
+002220   010003                  309     mov r0, r3 ; Putting index of the current row in r3.
+002222   062703 000001           310     add #1, r3 ; Increasing row index by 1.
+002226   010105                  311     mov r1, r5 ; Putting index of the current column in r5.
+002230   162705 000001           312     sub #1, r5 ; Decreasing column index by 1.
+002234   020527 000000           313     cmp r5, #0
+002240   002636                  314     blt NextCell ; If column index is less than 0, cannot move right, skip to the next cell.
+002242   026227 000016 000002    315     cmp 14.(r2), #2 ; Checking if the lower left piece is black.
+002250   001632                  316     beq NextCell ; If the lower left piece is white, cannot move there, skip to the next cell.
+002252   026227 000016 000001    317     cmp 14.(r2), #1 ; Checking if the lower left piece is white.
+002260   001413                  318     beq EatRB ; If the lower left piece is white, check if the black piece can eat it.
+                                 319     
+                                 320     ; --- BLACK CAN MOVE RIGHT ---
+                                 321     ; Inserting new location of the white piece to stack
+002262   010246                  322     mov r2, -(sp)
+002264   062716 000016           323     add #14., (sp)
+                                 324     ; No eaten piece. Inserting 0.
+002270   012746 000000           325     mov #0, -(sp)
+                                 326     ; Makes the move
+002274   004767 000752           327     jsr pc, BlackMov
+002300   062706 000004           328     add #4., sp
+002304   000167 177426           329     jmp NextCell
+                                 330     
+002310                           331     EatRB:
+002310   162705 000001           332     sub #1, r5 ; Reducing column index by 1.
+002314   020527 000000           333     cmp r5, #0
+002320   002606                  334     blt NextCell ; If column index is less than 0, cannot eat, skip to the next cell.
+002322   062703 000001           335     add #1, r3 ; Increasing row index by 1.
+002326   020327 000007           336     cmp r3, #7
+002332   003201                  337     bgt NextCell ; If r3 is bigger than 7, cannot eat (out of bounds). Skip to the next cell.
+                                 338     ;If we got here, the cell which the current white piece should be placed after eating is in the board bounds, Check if it is empty.
+002334   026227 000034 000000    339     cmp 28.(r2), #0 ; Checking if the cell is empty.
+002342   001216                  340     bne jNxtCell ;If the cell is not empty, cannot eat. Skip to the next cell.
+                                 341     
+                                 342     ; --- BLACK EAT RIGHT ---
+                                 343     ; Inserting new location of the white piece to stack
+002344   010246                  344     mov r2, -(sp)
+002346   062716 000034           345     add #28., (sp)
+                                 346     ; Inserting location of eaten piece.
+002352   010246                  347     mov r2, -(sp)
+002354   062716 000016           348     add #14., (sp)
+                                 349     ; Makes the move
+002360   004767 000666           350     jsr pc, BlackMov
+002364   062706 000004           351     add #4., sp
+002370   000167 177342           352     jmp NextCell
+                                 353     
+                                 354     
+                                 355     ;This method checks if a given board is in a winning state for the given player.
+                                 356     ;Input -
+                                 357     ; - A number of player to check - will be stored in 4(sp).
+                                 358     ; - A label of the beggining of the board - will be stored in 6(sp).
+                                 359     ;Output -
+                                 360     ; - (-1) if the current player didn't win, 1 if the current player wins - will be stored in 2(sp).
+002374                           361     checkWin:
+002374   005746                  362     tst -(sp) ; Allocating place for number of white pieces.
+002376   005746                  363     tst -(sp) ; Allocating place for number of black pieces.
+002400   016646 000012           364     mov 12(sp), -(sp) ; Copying board adress to the top of the stack.
+002404   004767 001234           365     jsr pc, countWB
+002410   005726                  366     tst (sp)+ ; Pop board adress.
+002412   026627 000010 000001    367     cmp 10(sp), #1 ; Check if the current player is white.
+002420   001006                  368     bne checkb ; Branch to checkb if the current player is black.
+002422   005716                  369     tst (sp) ; Current player is white, checks the number of black pieces.
+002424   001446                  370     beq currWin ; If the number of black pieces is 0 white player wins.
+002426   005766 000002           371     tst 2(sp) ; Checks the number of white pieces.
+002432   001453                  372     beq noWin ; Current player is white and the number of white pieces is 0, white player loses.
+002434   000405                  373     br not0 ; Both player's number of pieces is not 0.
+                                 374     
+002436                           375     checkb: ; The current player is black.
+002436   005766 000002           376     tst 2(sp) ; Checks if the number of white pieces is 0.
+002442   001437                  377     beq currWin ; Black player wins.
+002444   005716                  378     tst (sp) ; Checks if the number of black pieces is 0.
+002446   001445                  379     beq noWin ; Current player is black and the number of black pieces is 0.
+                                 380     
+002450                           381     not0: ; We get here if the number of both player's pieces is not 0.
+002450   012746 000001           382     mov #1, -(sp) ; Moving number of white player to check number of moves for him.
+002454   012746 000000           383     mov #0, -(sp) ; Allocating place for number of moves and setting it to 0.
+                                 384     ; Checking if there is legal moves for the given player.
+002460   004767 001264           385     jsr pc, moveChk ; Number of legal moves for white player will be at the top of the stack.
+002464   005716                  386     tst (sp) ; Checks if white player has legal moves to make.
+002466   001033                  387     bne hasMoves ; There are still moves to make.
+002470   012766 000002 000002    388     mov #2, 2(sp) ; Moving number of black player to check number of moves for him.
+002476   004767 001246           389     jsr pc, moveChk ; Number of legal moves for black player will be at the top of the stack.
+002502   005716                  390     tst (sp) ; Checks if both players has legal moves to make.
+002504   001024                  391     bne hasMoves ; One of the players still has moves to make.
+002506   005726                  392     tst (sp)+ ; Pops number of player's moves.
+002510   005726                  393     tst (sp)+ ; Pops player number.
+002512   022766 000001 000010    394     cmp #1, 10(sp) ; Checks if the player is the white player.
+002520   001004                  395     bne blackChk ; The player is the black player.
+002522   026616 000002           396     cmp 2(sp), (sp) ; Checks if number of white pieces is bigger than number of black pieces.
+002526   003005                  397     bgt currWin ; If the number of white pieces is bigger, white player wins.
+002530   000414                  398     br noWin ; If we got here the number of white pieces is not bigger.
+002532                           399     blackChk: ; The current player color is black.
+002532   021666 000002           400     cmp (sp), 2(sp) ; Checks if number of black pieces is bigger than number of white pieces.
+002536   003001                  401     bgt currWin ; Black player wins.
+002540   000410                  402     br noWin ; Black player lost.
+                                 403     
+002542                           404     currWin: ; The current player wins.
+002542   005726                  405     tst (sp)+ ; Pop number of black pieces.
+002544   005726                  406     tst (sp)+ ; Pop number of white pieces.
+002546   012766 000001 000002    407     mov #1, 2(sp) ; The return value will be 1.
+002554   000207                  408     rts pc
+                                 409     
+002556                           410     hasMoves: ; One of the players still has legal moves.
+002556   005726                  411     tst (sp)+ ; Pops number of moves.
+002560   005726                  412     tst (sp)+ ; Pops the number of player.
+002562                           413     noWin: ; The current player is not winning.
+002562   005726                  414     tst (sp)+ ; Pop number of black pieces.
+002564   005726                  415     tst (sp)+ ; Pop number of white pieces.
+002566   012766 177777 000002    416     mov #-1., 2(sp)
+002574   000207                  417     rts pc
+                                 418     
+                                 419     ; END OF checkWin
+                                 420     
+                                 421     ; Input:
+                                 422     ; 1. Label of the current board status - will be stored at 4(sp).
+                                 423     ; 2. Current player's turn (1-white,2-black) - will be stored at 2(sp).
+                                 424     ; Output:
+                                 425     ; Winning parameter - will be stored at R4.
+002576                           426     calcWP:
+002576   016746 175176           427     mov 0, -(sp) ; Leaving blank space for output.
+002602   016746 175172           428     mov 0, -(sp) ; Leaving blank space for output.
+002606   016646 000010           429     mov 8(sp), -(sp) ; Giving the label of the board as input.
+002612   004767 001026           430     jsr pc, countWB ; Counter number of vessels from each color.
+002616   062706 000002           431     add #2, sp ; Popping the no longer needed board label from stack.
+002622   026627 000006 000002    432     cmp 6(sp), #2
+002630   001404                  433     beq WPforW ; if current player (input) is white - go to WPforW
+                                 434     ; If we got here then the current player is black. It means that
+                                 435     ; the last player to move was white.
+002632   016604 000002           436     mov 2(sp), r4 ; r4 = number of white vessels.
+002636   161604                  437     sub (sp), r4 ; r4 = r4 - number of black vessels.
+002640   000404                  438     br endCalWP ; Jumping to the end of the method.
+002642                           439     WPforW:
+                                 440     ; If we got here current player is white. It means that the
+                                 441     ; last player to move was black.
+002642   011604                  442     mov (sp), r4 ; r4 = number of black vessels.
+002644   166604 000002           443     sub 2(sp), r4 ; r4 = r4 - number of white players.
+002650   000400                  444     br endCalWP ; Jumping to the end of the method.
+002652                           445     endCalWP:
+002652   062706 000004           446     add #4, sp ; popping 2 items from stack (counters of W&B vessles)
+002656   000207                  447     rts pc
+                                 448     
+                                 449     ; END OF calcWP
+                                 450     
+                                 451     ; ----- HELPING FUNCTIONS -----
+                                 452     ; 1. WhiteMov
+                                 453     ; 2. Blackmov
+                                 454     ; 3. countWB
+                                 455     ; 4. moveChk
+                                 456     
+002660                           457     WhiteMov:
+                                 458     ; Making the move of the white player.
+002660   012776 000001 000004    459     mov #1, @4.(sp) ; Moving white piece to the new place.
+002666   012712 000000           460     mov #0, (r2) ; Removing white piece from the last place it was.
+                                 461     
+                                 462     ; Checks if there is an eat
+002672   005766 000002           463     tst 2(sp)
+002676   001403                  464     beq noEat
+                                 465     
+                                 466     ; If we got here there is an eat
+002700   012776 000000 000002    467     mov #0, @2.(sp) ; Removing eaten piece
+                                 468     
+002706                           469     noEat:
+                                 470     
+                                 471     ; Backing up registers before calling the REC function.
+002706   010046                  472     mov r0, -(sp) ; Backing up r0.
+002710   010146                  473     mov r1, -(sp) ; Backing up r1.
+002712   010246                  474     mov r2, -(sp) ; Backing up r2.
+002714   010346                  475     mov r3, -(sp) ; Backing up r3.
+002716   010546                  476     mov r5, -(sp) ; Backing up r5.
+                                 477     
+                                 478     ; Preparing the arguments for the REC function.
+002720   012746 000000           479     mov #0, -(sp) ; Allocating source position.
+002724   012746 000000           480     mov #0, -(sp) ; Allocating destenation position.
+002730   022766 000001 000032    481     cmp #1, 26.(sp) ; Checking if minimum or maximum was checked in the last call.
+002736   001405                  482     beq chngMin ; Changing maximum to minimum.
+                                 483     
+                                 484     ; If we got here in the next REC we will check for maximum
+002740   012746 177634           485     mov #-100., -(sp) ; Miminum was checked in the last call.
+002744   012746 000001           486     mov #1, -(sp) ; Maximum will be checked.
+002750   000404                  487     br changed
+                                 488     
+002752                           489     chngMin: ; Changing maximum to minimum.
+002752   012746 000144           490     mov #100., -(sp) ; Maximum was checked in the last call.
+002756   012746 177777           491     mov #-1., -(sp) ; Minimum will be checked.
+                                 492     
+002762                           493     changed: ; Changed maximum\minimum value.
+002762   012746 000003           494     mov #3, -(sp)
+002766   166616 000036           495     sub 30.(sp), (sp) ; Chaning to the other player.
+002772   016646 000034           496     mov 28.(sp), -(sp) ; Copying last number of steps.
+002776   162716 000001           497     sub #1, (sp) ; Substract 1 from number of steps.
+003002   004767 176150           498     jsr pc, getWPRec
+                                 499     
+003006   026627 000042 000001    500     cmp 34.(sp), #1 ; The father is looking for a maximum.
+003014   001441                  501     beq upMax ; Father was looking for a maximum.
+                                 502     
+                                 503     ; Father was looking for a minimum.
+003016   026666 000006 000044    504     cmp 6(sp), 36.(sp) ; Comparing wp to the wp of the father.
+003024   003067                  505     bgt nUpdate
+                                 506     
+                                 507     ; Updating minimum.
+003026   016666 000006 000044    508     mov 6(sp), 36.(sp) ; Updating father wp to new minimum.
+003034   062706 000014           509     add #12., sp ; Popping all values besides registers backup.
+003040   012605                  510     mov (sp)+, r5
+003042   012603                  511     mov (sp)+, r3
+003044   012602                  512     mov (sp)+, r2
+003046   012601                  513     mov (sp)+, r1
+003050   012600                  514     mov (sp)+, r0
+                                 515     
+                                 516     ; Restoring previous board and updating father src and dst.
+                                 517     ; Restoring white piece previous location.
+003052   012712 000001           518     mov #1, (r2)
+003056   012776 000000 000004    519     mov #0, @4.(sp)
+                                 520     ; Checks if there was an eat:
+003064   005766 000002           521     tst 2(sp) ;
+003070   001404                  522     beq SrcDst ; No eat. We don't need to restore. go to update src and dst.
+                                 523     ; If we got here there was an eat and we need to restore it.
+003072   012776 000002 000002    524     mov #2., @2.(sp) ; Restoring eaten black piece.
+003100   000400                  525     br SrcDst
+                                 526     
+003102                           527     SrcDst:
+003102   010266 000022           528     mov r2, 18.(sp) ; Updating father src.
+003106   016666 000004 000020    529     mov 4(sp), 16.(sp) ; Updating father dest.
+003114   000207                  530     rts pc
+                                 531     
+003116                           532     nSrcDst:
+003116   000207                  533     rts pc
+                                 534     
+003120                           535     upMax:
+                                 536     ; The father is looking for maximum
+003120   026666 000006 000044    537     cmp 6(sp), 36.(sp) ; Comparing wp to the wp of the father.
+003126   003426                  538     ble nUpdate ; Jumps if we do not need to update.
+                                 539     
+                                 540     ; We need to update to new Maximum
+003130   016666 000006 000044    541     mov 6(sp), 36.(sp) ; Updating father wp to new maximum.
+003136   062706 000014           542     add #12., sp ; Popping all values besides registers backup.
+003142   012605                  543     mov (sp)+, r5
+003144   012603                  544     mov (sp)+, r3
+003146   012602                  545     mov (sp)+, r2
+003150   012601                  546     mov (sp)+, r1
+003152   012600                  547     mov (sp)+, r0
+                                 548     
+                                 549     ; Restoring previous board and updating father src and dst.
+                                 550     ; Restoring white piece previous location.
+003154   012712 000001           551     mov #1, (r2)
+003160   012776 000000 000004    552     mov #0, @4.(sp)
+                                 553     ; Checks if there was an eat:
+003166   005766 000002           554     tst 2(sp) ;
+003172   001743                  555     beq SrcDst ; No eat. We don't need to restore. go to update src and dst.
+                                 556     ; If we got here there was an eat and we need to restore it.
+003174   012776 000002 000002    557     mov #2., @2.(sp) ; Restoring eaten black piece.
+003202   000737                  558     br SrcDst
+                                 559     
+003204                           560     nUpdate:
+003204   062706 000014           561     add #12., sp ; Popping all values besides registers backup.
+003210   012605                  562     mov (sp)+, r5
+003212   012603                  563     mov (sp)+, r3
+003214   012602                  564     mov (sp)+, r2
+003216   012601                  565     mov (sp)+, r1
+003220   012600                  566     mov (sp)+, r0
+                                 567     ; Restoring previous board and updating father src and dst.
+                                 568     ; Restoring white piece previous location.
+003222   012712 000001           569     mov #1, (r2)
+003226   012776 000000 000004    570     mov #0, @4.(sp)
+                                 571     ; Checks if there was an eat:
+003234   005766 000002           572     tst 2(sp) ;
+003240   001726                  573     beq nSrcDst ; No eat. We don't need to restore. No need to update src and dst.
+003242   012776 000002 000002    574     mov #2., @2.(sp) ; Restoring eaten black piece.
+003250   000722                  575     br nSrcDst ; No need to update src and dst.
+                                 576     
+                                 577     ; END OF WhiteMov
+                                 578     
+003252                           579     BlackMov:
+                                 580     ; Making the move of the black player.
+003252   012776 000002 000004    581     mov #2, @4.(sp) ; Moving black piece to the new place.
+003260   012712 000000           582     mov #0, (r2) ; Removing black piece from the last place it was.
+                                 583     
+                                 584     ; Checks if there is an eat
+003264   005766 000002           585     tst 2(sp)
+003270   001403                  586     beq noEatB
+                                 587     
+                                 588     ; If we got here there is an eat
+003272   012776 000000 000002    589     mov #0, @2.(sp) ; Removing eaten piece
+                                 590     
+003300                           591     noEatB:
+                                 592     
+                                 593     ; Backing up registers before calling the REC function.
+003300   010046                  594     mov r0, -(sp) ; Backing up r0.
+003302   010146                  595     mov r1, -(sp) ; Backing up r1.
+003304   010246                  596     mov r2, -(sp) ; Backing up r2.
+003306   010346                  597     mov r3, -(sp) ; Backing up r3.
+003310   010546                  598     mov r5, -(sp) ; Backing up r5.
+                                 599     
+                                 600     ; Preparing the arguments for the REC function.
+003312   012746 000000           601     mov #0, -(sp) ; Allocating source position.
+003316   012746 000000           602     mov #0, -(sp) ; Allocating destenation position.
+003322   022766 000001 000032    603     cmp #1, 26.(sp) ; Checking if minimum or maximum was checked in the last call.
+003330   001405                  604     beq chngMinB ; Changing maximum to minimum.
+                                 605     
+                                 606     ; If we got here in the next REC we will check for maximum
+003332   012746 177634           607     mov #-100., -(sp) ; Miminum was checked in the last call.
+003336   012746 000001           608     mov #1, -(sp) ; Maximum will be checked.
+003342   000404                  609     br changedB
+                                 610     
+003344                           611     chngMinB: ; Changing maximum to minimum.
+003344   012746 000144           612     mov #100., -(sp) ; Maximum was checked in the last call.
+003350   012746 177777           613     mov #-1., -(sp) ; Minimum will be checked.
+                                 614     
+003354                           615     changedB: ; Changed maximum\minimum value.
+003354   012746 000003           616     mov #3, -(sp)
+003360   166616 000036           617     sub 30.(sp), (sp) ; Changing to the other player.
+003364   016646 000034           618     mov 28.(sp), -(sp) ; Copying last number of steps.
+003370   162716 000001           619     sub #1, (sp) ; Substract 1 from number of steps.
+003374   004767 175556           620     jsr pc, getWPRec
+                                 621     
+003400   026627 000042 000001    622     cmp 34.(sp), #1 ; The father is looking for a maximum.
+003406   001441                  623     beq upMaxB ; Father was looking for a maximum.
+                                 624     
+                                 625     ; Father was looking for a minimum.
+003410   026666 000006 000044    626     cmp 6(sp), 36.(sp) ; Comparing wp to the wp of the father.
+003416   003067                  627     bgt nUpdateB
+                                 628     
+                                 629     ; Updating minimum.
+003420   016666 000006 000044    630     mov 6(sp), 36.(sp) ; Updating father wp to new minimum.
+003426   062706 000014           631     add #12., sp ; Popping all values besides registers backup.
+003432   012605                  632     mov (sp)+, r5
+003434   012603                  633     mov (sp)+, r3
+003436   012602                  634     mov (sp)+, r2
+003440   012601                  635     mov (sp)+, r1
+003442   012600                  636     mov (sp)+, r0
+                                 637     
+                                 638     ; Restoring previous board and updating father src and dst.
+                                 639     ; Restoring black piece previous location.
+003444   012712 000002           640     mov #2, (r2)
+003450   012776 000000 000004    641     mov #0, @4.(sp)
+                                 642     ; Checks if there was an eat:
+003456   005766 000002           643     tst 2(sp) ;
+003462   001404                  644     beq SrcDstB ; No eat. We don't need to restore. go to update src and dst.
+                                 645     ; If we got here there was an eat and we need to restore it.
+003464   012776 000001 000002    646     mov #1., @2.(sp) ; Restoring eaten white piece.
+003472   000400                  647     br SrcDstB
+                                 648     
+003474                           649     SrcDstB:
+003474   010266 000022           650     mov r2, 18.(sp) ; Updating father src.
+003500   016666 000004 000020    651     mov 4(sp), 16.(sp) ; Updating father dest.
+003506   000207                  652     rts pc
+                                 653     
+003510                           654     nSrcDstB:
+003510   000207                  655     rts pc
+                                 656     
+003512                           657     upMaxB:
+                                 658     ; The father is looking for maximum
+003512   026666 000006 000044    659     cmp 6(sp), 36.(sp) ; Comparing wp to the wp of the father.
+003520   003426                  660     ble nUpdateB ; Jumps if we do not need to update.
+                                 661     
+                                 662     ; We need to update to new Maximum
+003522   016666 000006 000044    663     mov 6(sp), 36.(sp) ; Updating father wp to new maximum.
+003530   062706 000014           664     add #12., sp ; Popping all values besides registers backup.
+003534   012605                  665     mov (sp)+, r5
+003536   012603                  666     mov (sp)+, r3
+003540   012602                  667     mov (sp)+, r2
+003542   012601                  668     mov (sp)+, r1
+003544   012600                  669     mov (sp)+, r0
+                                 670     
+                                 671     ; Restoring previous board and updating father src and dst.
+                                 672     ; Restoring black piece previous location.
+003546   012712 000002           673     mov #2, (r2)
+003552   012776 000000 000004    674     mov #0, @4.(sp)
+                                 675     ; Checks if there was an eat:
+003560   005766 000002           676     tst 2(sp) ;
+003564   001743                  677     beq SrcDstB ; No eat. We don't need to restore. go to update src and dst.
+                                 678     ; If we got here there was an eat and we need to restore it.
+003566   012776 000001 000002    679     mov #1., @2.(sp) ; Restoring eaten white piece.
+003574   000737                  680     br SrcDstB
+                                 681     
+003576                           682     nUpdateB:
+003576   062706 000014           683     add #12., sp ; Popping all values besides registers backup.
+003602   012605                  684     mov (sp)+, r5
+003604   012603                  685     mov (sp)+, r3
+003606   012602                  686     mov (sp)+, r2
+003610   012601                  687     mov (sp)+, r1
+003612   012600                  688     mov (sp)+, r0
+                                 689     ; Restoring previous board and updating father src and dst.
+                                 690     ; Restoring black piece previous location.
+003614   012712 000002           691     mov #2, (r2)
+003620   012776 000000 000004    692     mov #0, @4.(sp)
+                                 693     ; Checks if there was an eat:
+003626   005766 000002           694     tst 2(sp) ;
+003632   001726                  695     beq nSrcDstB ; No eat. We don't need to restore. No need to update src and dst.
+003634   012776 000001 000002    696     mov #1., @2.(sp) ; Restoring eaten white piece.
+003642   000722                  697     br nSrcDstB ; No need to update src and dst.
+                                 698     
+                                 699     ; END OF BlackMov
+                                 700     
+                                 701     
+                                 702     ; This method will count how many vessles from each color are there on the
+                                 703     ; given board.
+                                 704     ;
+                                 705     ; Input:
+                                 706     ; Label of the beginning of the board - will be stored at 2(sp).
+                                 707     ;
+                                 708     ; Output:
+                                 709     ; Number of white vessels - after rts will be stored at 4(sp).
+                                 710     ; Number of black vessels - after rts will be stored at 2(sp).
+                                 711     ;
+                                 712     ; Notice: after rts 0(sp) will store the label of the board which is usually no
+                                 713     ; longer needed.
+003644                           714     countWB:
+003644   010046                  715     mov r0, -(sp) ; Backing up r0. r0 will be used to scan the board.
+003646   010146                  716     mov r1, -(sp) ; Backing up r1. r1 will be used to count white vessels.
+003650   010246                  717     mov r2, -(sp) ; Backing up r2. r2 will be used to count black vessels.
+003652   010346                  718     mov r3, -(sp) ; Backing up r3. r3 will store the end of the board.
+003654   005001                  719     clr r1
+003656   005002                  720     clr r2
+003660   016600 000012           721     mov 10.(sp), r0 ; r0 = beginning of the board.
+003664   010003                  722     mov r0, r3 ; r3 = beginning of the board.
+003666   062703 000176           723     add #176, r3 ; r3 = end of the board.
+003672                           724     cntloop:
+003672   005710                  725     tst (r0) ;
+003674   001410                  726     beq endloop ; if (r0) is 0 then no player in this cell.
+003676   021027 000001           727     cmp (r0), #1
+003702   001002                  728     bne addBLK
+003704   005201                  729     inc r1 ; Current cell is white. r1++ .
+003706   000403                  730     br endloop ; Go to next cell.
+003710                           731     addBLK:
+003710   005202                  732     inc r2 ; Current cell is black. r2++ .
+003712   000167 000000           733     jmp endloop ; Go to next cell.
+                                 734     
+003716                           735     endloop:
+003716   062700 000002           736     add #2, r0 ; r0 will point to next cell in the board.
+003722   020003                  737     cmp r0,r3
+003724   003762                  738     ble cntloop ; if we are still in the board limits - go to cntloop.
+                                 739     ; If we got here we finished going through the entire board.
+003726   010166 000016           740     mov r1, 14.(sp) ; Writing white counter to stack.
+003732   010266 000014           741     mov r2, 12.(sp) ; Writing black counter to stack.
+003736   012603                  742     mov (sp)+, r3 ; Restoring the value of r3.
+003740   012602                  743     mov (sp)+, r2 ; Restoring the value of r2.
+003742   012601                  744     mov (sp)+, r1 ; Restoring the value of r1.
+003744   012600                  745     mov (sp)+, r0 ; Restoring the value of r0.
+003746   000207                  746     rts pc
+                                 747     
+                                 748     ; END OF countWB
+                                 749     
+                                 750     
+                                 751     ;This method checks the number of moves for  a given player.
+                                 752     ;Input:
+                                 753     ; - A number of player to check, will be at 2(sp).
+                                 754     ;Output:
+                                 755     ; - A number of moves to add to, will be at (sp).
+003750                           756     moveChk:
+                                 757     ; r0 - Current row index.
+                                 758     ; r1 - Current column index.
+003750   010046                  759     mov r0, -(sp) ; Saving r0's value on stack.
+003752   010146                  760     mov r1, -(sp) ; Saving r1's value on stack.
+003754   010246                  761     mov r2, -(sp) ; Saving r2's value on stack
+003756   010346                  762     mov r3, -(sp) ; Saving r3's value on stack
+003760   010546                  763     mov r5, -(sp); Saving r5's value on stack
+003762   005000                  764     clr r0 ; Sets r0 to 0.
+003764   005001                  765     clr r1 ; Sets r1 to 0.
+003766   026627 000016 000001    766     cmp 14.(sp), #1 ; Checking if the current color is white.
+003774   001165                  767     bne Black1 ; If the color is not white, branch to Black.
+003776   000400                  768     br White1 ; If the color is white, branch to White.
+                                 769     
+                                 770     
+                                 771     
+004000                           772     White1:
+                                 773     ; This method will check legal moves of all white pieces and add 1 to NumMoves each time a legal move is found.
+                                 774     ; r2- current cell pointer.
+                                 775     ; r3 - temporary row index (will be used once for another calculation).
+                                 776     ; r5 - temporary column index (will be used once for another calculation).
+                                 777     
+004000   010003                  778     mov r0, r3  ; Putting index of the current row in r3.
+004002   010105                  779     mov r1, r5  ; Putting index of the current column in r5.
+004004   012702 007000           780     mov #Board, r2 ; Putting board array starting index in r2.
+004010   070327 000020           781     mul #16., r3 ; Multiplying the number of row by 16 (decimal) (length of each row in bits).
+004014   070527 000002           782     mul #2, r5 ; Multiplying the number of column by 2 (decimal) (length of each column in bits).
+004020   060302                  783     add r3, r2 ; Adding the number of bits needed in order to point to a start of a row.
+004022   060502                  784     add r5, r2 ; Adding the number of bits needed in order to point a cell in a row.
+                                 785     ; r2 will now contain the address of the current cell.
+004024   021227 000001           786     cmp (r2), #1 ; Checking if the current piece is white.
+004030   001127                  787     bne skipcell1 ; If the color of the current piece is not white skip to the next cell.
+004032   010003                  788     mov r0, r3 ; Setting r3 to the current row index (after changing it earlier).
+004034   162703 000001           789     sub #1, r3 ; Reducing row index by 1.
+004040   020327 000000           790     cmp r3, #0
+004044   002521                  791     blt skipcell1 ; If row index is less than 0, cannot move left or right, skip to the next cell.
+004046   010105                  792     mov r1, r5 ; Setting r5 to the current column index (after changing it eariler).
+004050   062705 000001           793     add #1, r5 ; Increasing column index by 1.
+004054   020527 000007           794     cmp r5, #7
+004060   003036                  795     bgt jLeftW01 ; If column index is bigger than 7, the current piece cannot move right, check legal moves to the left.
+004062   026227 177762 000001    796     cmp -14.(r2), #1 ; Checking if the upper right piece is white.
+004070   001432                  797     beq jLeftW01 ; If the upper right piece is white, cannot go there, check legal moves to the left.
+004072   026227 177762 000002    798     cmp -14.(r2), #2 ; Checking if the upper right piece is black.
+004100   001404                  799     beq eatrw1 ; If the upper right piece is black, check if the white piece can eat it.
+004102   062766 000001 000014    800     add #1, 12.(sp) ; If we got here the upper right cell contains 0, the white piece can move there. Adding 1 to number of legal moves.
+004110   000471                  801     br End1 ;Found a legal move.
+                                 802     
+                                 803     
+004112                           804     eatrw1:
+                                 805     ;This method will check an eating option the right of white pieces.
+                                 806     ; r2- current cell pointer.
+                                 807     ; r3 - temporary row index .
+                                 808     ; r5 - temporary column index.
+                                 809     
+004112   162703 000001           810     sub #1, r3 ; Reducing row index by 1.
+004116   020327 000000           811     cmp r3, #0
+004122   002415                  812     blt jLeftW01 ; If r3 is less than 0, cannot eat (out of bounds). Check legal moves to the left.
+004124   062705 000001           813     add #1, r5 ;Increasing column index by 1.
+004130   020527 000007           814     cmp r5, #7
+004134   003010                  815     bgt jLeftW01 ; If column index is bigger than 7, cannot eat (out of bounds). Check legal moves to the left.
+                                 816     ;If we got here, the cell which the current white piece should be placed after eating is in the board bounds, we need to check if it is empty.
+004136   026227 177744 000000    817     cmp -28.(r2), #0 ; Checking if the cell is empty.
+004144   001004                  818     bne jLeftW01 ; If the cell is not empty, cannot eat. Check legal moves to the left.
+004146   062766 000001 000014    819     add #1, 12.(sp) ;If we got here, can eat, adding 1 to number of legal moves.
+004154   000447                  820     br End1 ;Found a legal move.
+                                 821     
+                                 822     
+004156                           823     jLeftW01:
+                                 824     ; This method will check legal moves to the left of white pieces.
+                                 825     ; r2- current cell pointer.
+                                 826     ; r3 - temporary row index .
+                                 827     ; r5 - temporary column index.
+                                 828     
+004156   010003                  829     mov r0, r3 ; Putting index of the current row in r3.
+004160   162703 000001           830     sub #1, r3 ; Reducing row index by 1.
+004164   010105                  831     mov r1, r5 ; Putting index of the current column in r5.
+004166   162705 000001           832     sub #1, r5 ; Reducing column index by 1.
+004172   020527 000000           833     cmp r5, #0
+004176   002444                  834     blt skipcell1 ; If column index is less than 0, cannot move right, skip to the next cell.
+004200   026227 177756 000001    835     cmp -18.(r2), #1 ; Checking if the upper left piece is white.
+004206   001440                  836     beq skipcell1 ; If the upper left piece is white, cannot move there, skip to the next cell.
+004210   026227 177756 000002    837     cmp -18.(r2), #2 ; Checking if the upper left piece is black.
+004216   001404                  838     beq eatlw1 ; If the upper left piece is black, Check if the white piece can eat it.
+004220   062766 000001 000014    839     add #1, 12.(sp) ; If we got here, upper left cell contains 0, can move there. Adding 1 to number of legal moves..
+004226   000422                  840     br End1 ;Found a legal move.
+                                 841     
+004230                           842     eatlw1:
+                                 843     ;This method will check an eating option the left of white pieces.
+                                 844     ; r2- current cell pointer.
+                                 845     ; r3 - temporary row index .
+                                 846     ; r5 - temporary column index.
+                                 847     
+004230   162705 000001           848     sub #1, r5 ; Reducing column index by 1.
+004234   020527 000000           849     cmp r5, #0
+004240   002423                  850     blt skipcell1 ; If column index is less than 0, cannot eat, skip to the next cell.
+004242   162703 000001           851     sub #1, r3 ; Reducing row index by 1.
+004246   020327 000000           852     cmp r3, #0
+004252   002416                  853     blt skipcell1 ; If r3 is less than 0, cannot eat (out of bounds). Skip to the next cell.
+                                 854     ;If we got here, the cell which the current white piece should be placed after eating is in the board bounds, Check if it is empty.
+004254   026227 177734 000000    855     cmp -36.(r2), #0 ; Checking if the cell is empty.
+004262   001012                  856     bne skipcell1 ;If the cell is not empty, cannot eat. Skip to the next cell.
+004264   062766 000001 000014    857     add #1, 12.(sp) ;If we got here, can eat, adding 1 to legal number of moves on the stack.
+004272   000400                  858     br End1 ;Found a legal move.
+                                 859     
+004274                           860     End1: ;If we got here we checked all the cells of the array or we got a legal move.
+004274   012605                  861     mov (sp)+, r5 ; Returning r5 it's original value.
+004276   012603                  862     mov (sp)+, r3 ; Returning r3 it's original value.
+004300   012602                  863     mov (sp)+, r2 ; Returning r2 it's original value.
+004302   012601                  864     mov (sp)+, r1 ; Returning r1 it's original value.
+004304   012600                  865     mov (sp)+, r0 ; Returning r0 it's original value.
+004306   000207                  866     rts pc ; When we return from this subroutine the output will be at the top of the stack
+                                 867     
+004310                           868     skipcell1:
+                                 869     ; This method will skip to the next cell by adding 1 to column index. If column
+                                 870     ; index is bigger than 7 sets it to 0 and adds 1 to row index.
+                                 871     ; r0 - Current row index.
+                                 872     ; r1 - Current column index.
+                                 873     
+004310   062701 000001           874     add #1, r1
+004314   020127 000010           875     cmp r1, #8 ; Checking if passed end of row.
+004320   002406                  876     blt inRange1 ; Index of column is legal.
+004322   005001                  877     clr r1 ; If we got here index of column passed end of row. Set it to 0.
+004324   062700 000001           878     add #1, r0 ; Go to the next row.
+004330   020027 000007           879     cmp r0, #7
+004334   003357                  880     bgt End1 ; If index of row is bigger than 7 we reached the end of the board.
+                                 881     
+004336                           882     inRange1:
+                                 883     ;Continue on checking in the same row.
+004336   026627 000016 000001    884     cmp 14.(sp), #1
+004344   001001                  885     bne Black1
+004346   000614                  886     br White1
+                                 887     
+                                 888     
+004350                           889     Black1:
+                                 890     ;This method will check legal moves of all black pieces and add 1 to NumMoves each time a legal move is found.
+                                 891     ; r2- current cell pointer.
+                                 892     ; r3 - temporary row index (will be used once for another calculation).
+                                 893     ; r5 - temporary column index (will be used once for another calculation).
+                                 894     
+004350   010003                  895     mov r0, r3  ; Putting index of the current row in r3.
+004352   010105                  896     mov r1, r5  ; Putting index of the current column in r5.
+004354   012702 007000           897     mov #Board, r2 ; Putting board array starting index in r2.
+004360   070327 000020           898     mul #16., r3 ; Multiplying the number of row by 16 (decimal) (length of each row in bits).
+004364   070527 000002           899     mul #2, r5 ; Multiplying the number of column by 2 (decimal) (length of each column in bits).
+004370   060302                  900     add r3, r2 ;Adding the number of bits needed in order to point to a start of a row.
+004372   060502                  901     add r5, r2 ; Adding the number of bits needed in order to point a cell in a row.
+                                 902     ; r2 will now contain the address of the current cell.
+004374   021227 000002           903     cmp (r2), #2 ; Checking if the current piece is black.
+004400   001343                  904     bne skipcell1 ; If the color of the current piece is not black skip to the next cell.
+004402   010003                  905     mov r0, r3 ; Putting index of the current row in r3.
+004404   062703 000001           906     add #1, r3 ; Increasing row index by 1.
+004410   020327 000007           907     cmp r3, #7
+004414   003335                  908     bgt skipcell1 ; If row index is bigger than 7, cannot move left, skip to the next cell.
+004416   010105                  909     mov r1, r5 ; Setting r5 to the current column index (after changing it eariler).
+004420   062705 000001           910     add #1, r5 ; Increasing column index by 1.
+004424   020527 000007           911     cmp r5, #7
+004430   003036                  912     bgt RightB1 ; If column index is bigger than 7, the current piece cannot move left, Check legal moves to the right.
+004432   026227 000022 000002    913     cmp 18.(r2), #2 ; Checking if the lower right piece is black.
+004440   001432                  914     beq RightB1 ; If the lower right piece is black, cannot go there, Check legal moves to the right.
+004442   026227 000022 000001    915     cmp 18.(r2), #1 ; Checking if the lower right piece is black.
+004450   001404                  916     beq eatlb1 ; If the lower right piece is white, check if the black piece can eat it.
+004452   062766 000001 000014    917     add #1, 12.(sp) ; If we got here the lower right cell contains 0, the black piece can move there. Adding 1 to number of legal moves.
+004460   000705                  918     br End1 ;Found a legal move.
+                                 919     
+004462                           920     eatlb1:
+                                 921     ;This method will check an eating option the left of black pieces.
+                                 922     ; r2- current cell pointer.
+                                 923     ; r3 - temporary row index .
+                                 924     ; r5 - temporary column index.
+                                 925     
+004462   062703 000001           926     add #1, r3 ; Increasing row index by 1.
+004466   020327 000007           927     cmp r3, #7 ; If r3 is bigger than 7, cannot eat (out of bounds). Check legal moves to the right.
+004472   003015                  928     bgt RightB1
+004474   062705 000001           929     add #1, r5 ;Increasing column index by 1.
+004500   020527 000007           930     cmp r5, #7
+004504   003010                  931     bgt RightB1 ; If column index is bigger than 7, cannot eat (out of bounds). Check legal moves to the right.
+                                 932     ;If we got here, the cell which the current black piece should be placed after eating is in the board bounds, we need to check if it is empty.
+004506   026227 000044 000000    933     cmp 36.(r2), #0 ; Checking if the cell is empty.
+004514   001004                  934     bne RightB1 ; If the cell is not empty, cannot eat. Check legal moves to the right.
+004516   062766 000001 000014    935     add #1, 12.(sp) ;If we got here, can eat. Adding 1 to number of legal moves.
+004524   000663                  936     br End1 ;Found a legal move.
+                                 937     
+004526                           938     RightB1:
+                                 939     ; This method will check legal moves to the right of black pieces.
+                                 940     ; r2- current cell pointer.
+                                 941     ; r3 - temporary row index .
+                                 942     ; r5 - temporary column index.
+                                 943     
+004526   010003                  944     mov r0, r3 ; Putting index of the current row in r3.
+004530   062703 000001           945     add #1, r3 ; Increasing row index by 1.
+004534   010105                  946     mov r1, r5 ; Putting index of the current column in r5.
+004536   162705 000001           947     sub #1, r5 ; Decreasing column index by 1.
+004542   020527 000000           948     cmp r5, #0
+004546   002660                  949     blt skipcell1 ; If column index is less than 0, cannot move right, skip to the next cell.
+004550   026227 000016 000002    950     cmp 14.(r2), #2 ; Checking if the lower left piece is black.
+004556   001654                  951     beq skipcell1 ; If the lower left piece is white, cannot move there, skip to the next cell.
+004560   026227 000016 000001    952     cmp 14.(r2), #1 ; Checking if the lower left piece is white.
+004566   001404                  953     beq eatrb1 ; If the lower left piece is white, check if the black piece can eat it.
+004570   062766 000001 000014    954     add #1, 12.(sp) ; If we got here the lower left cell contains 0, the black piece can move there. Adding 1 to number of legal moves.
+004576   000636                  955     br End1 ;Found a legal move.
+                                 956     
+                                 957     
+004600                           958     eatrb1:
+                                 959     ; This method will check an eating option the right of black pieces.
+                                 960     ; r2- current cell pointer.
+                                 961     ; r3 - temporary row index .
+                                 962     ; r5 - temporary column index.
+                                 963     
+004600   162705 000001           964     sub #1, r5 ; Reducing column index by 1.
+004604   020527 000000           965     cmp r5, #0
+004610   002637                  966     blt skipcell1 ; If column index is less than 0, cannot eat, skip to the next cell.
+004612   062703 000001           967     add #1, r3 ; Increasing row index by 1.
+004616   020327 000007           968     cmp r3, #7
+004622   003232                  969     bgt skipcell1 ; If r3 is bigger than 7, cannot eat (out of bounds). Skip to the next cell.
+                                 970     ;If we got here, the cell which the current white piece should be placed after eating is in the board bounds, Check if it is empty.
+004624   026227 000034 000000    971     cmp 28.(r2), #0 ; Checking if the cell is empty.
+004632   001226                  972     bne skipcell1 ;If the cell is not empty, cannot eat. Skip to the next cell.
+004634   062766 000001 000014    973     add #1, 12.(sp) ;If we got here, can eat. Adding 1 to number of legal moves.
+004642   000614                  974     br End1 ;Found a legal move.
+                                 975     
+                                 976     ; END OF moveChk
+                                 977     
+                                 978     
+004644                           979     .=torg+7000
+                                 980     
+007000                           981     Board:
+007000   000000 000000 000000    982     .word 0,0,0,0,0,0,0,0
+         000000 000000 000000            
+         000000 000000                   
+007020   000000 000000 000000    983     .word 0,0,0,0,0,0,0,0
+         000000 000000 000000            
+         000000 000000                   
+007040   000000 000000 000000    984     .word 0,0,0,0,0,0,0,0
+         000000 000000 000000            
+         000000 000000                   
+007060   000000 000000 000000    985     .word 0,0,0,0,0,0,0,0
+         000000 000000 000000            
+         000000 000000                   
+007100   000000 000000 000000    986     .word 0,0,0,0,0,2,0,0
+         000000 000000 000002            
+         000000 000000                   
+007120   000000 000000 000000    987     .word 0,0,0,0,1,0,1,0
+         000000 000001 000000            
+         000001 000000                   
+007140   000000 000000 000000    988     .word 0,0,0,1,0,0,0,1
+         000001 000000 000000            
+         000000 000001                   
+007160   000000 000000 000002    989     .word 0,0,2,0,0,0,0,0
+         000000 000000 000000            
+         000000 000000                   
+007200   000002                  990     Player:.word 2
+007202   000001                  991     Steps:.word 1
+007204   000000                  992     WP: .word 0
+007206   000000                  993     SrcPos: .word 0
+007210   000000                  994     DstPos: .word 0
+
+
+	S Y M B O L   T A B L E
+	=======================
+
+SYMBOL    VALUE   TYPE
+------    -----   ----
+main      001000  text     
+SrcPos    007206  text     
+DstPos    007210  text     
+WP        007204  text     
+getMaxWP  001026  text     
+Player    007200  text     
+Steps     007202  text     
+getWPRec  001156  text     
+Board     007000  text     
+checkWin  002374  text     
+whoWon    001266  text     
+chkMoves  001320  text     
+calcWP    002576  text     
+playerLo  001306  text     
+jBlack    001340  text     
+White     001344  text     
+Black     002004  text     
+NextCell  001736  text     
+LeftW     001560  text     
+EatRW     001474  text     
+WhiteMov  002660  text     
+EatLW     001650  text     
+End       001734  text     
+InRange   001764  text     
+jNxtCell  002000  text     
+RightB    002220  text     
+EatLB     002134  text     
+BlackMov  003252  text     
+EatRB     002310  text     
+countWB   003644  text     
+checkb    002436  text     
+currWin   002542  text     
+noWin     002562  text     
+not0      002450  text     
+moveChk   003750  text     
+hasMoves  002556  text     
+blackChk  002532  text     
+WPforW    002642  text     
+endCalWP  002652  text     
+noEat     002706  text     
+chngMin   002752  text     
+changed   002762  text     
+upMax     003120  text     
+nUpdate   003204  text     
+SrcDst    003102  text     
+nSrcDst   003116  text     
+noEatB    003300  text     
+chngMinB  003344  text     
+changedB  003354  text     
+upMaxB    003512  text     
+nUpdateB  003576  text     
+SrcDstB   003474  text     
+nSrcDstB  003510  text     
+cntloop   003672  text     
+endloop   003716  text     
+addBLK    003710  text     
+Black1    004350  text     
+White1    004000  text     
+skipcell  004310  text     
+jLeftW01  004156  text     
+eatrw1    004112  text     
+End1      004274  text     
+eatlw1    004230  text     
+inRange1  004336  text     
+RightB1   004526  text     
+eatlb1    004462  text     
+eatrb1    004600  text     
