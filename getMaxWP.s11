@@ -8,7 +8,19 @@ mov #WinParam, -(sp)
 jsr pc, getMaxWP
 halt
 
+;-------------------------------------------------------------------------------
+;                                 getMaxWP:
+;-------------------------------------------------------------------------------
 ; This function makes first preperations and calls the reccursive function.
+; Inputs:
+;   1. #SrcPos - Label to write the source position of the piece should move.
+;   2. #DstPos - Label to write the destenation position of the piece should move.
+;   3. #WinParam - Label to write the winning parameter.
+; A label of the board, number of steps (how deep to check) and the player to
+; check will also be inputs in a common area.
+; Outputs:
+; The outputs will be written to the given labels (inputs).
+;-------------------------------------------------------------------------------
 getMaxWP:
 ; Preparing the stack for the first call.
 mov #0, -(sp) ; Allocating place source position in stack.
@@ -46,6 +58,16 @@ mov (sp)+, r0
 add #4, sp
 rts pc ; Returning to main.
 
+;-------------------------------------------------------------------------------
+;                                 getWPRec:
+;-------------------------------------------------------------------------------
+; This function is the recursive function. It calculates the best next move of a
+; given player in a given board.
+; Inputs:
+;   1. Player to check - will be in a common area.
+;   2. Steps - number of steps left to check.
+;   3.
+;-------------------------------------------------------------------------------
 ; This is the reccursive function.
 getWPRec:
 ; ----- STOP TERMS -----
@@ -538,11 +560,12 @@ add #4, sp ; popping 2 items from stack (counters of W&B pieces)
 rts pc
 ; END OF calcWP
 
-; ----- HELPING FUNCTIONS -----
+; ------------------------- HELPING FUNCTIONS -------------------------
 ; 1. WhiteMov - Making a move for white piece and calls the recursive function.
 ; 2. Blackmov - Making a move for black piece and calls the recursive function.
 ; 3. countWB - Counting number of pieces from each color.
 ; 4. countMov - Counting the legal moves of a given player in a given board.
+;----------------------------------------------------------------------
 
 ; This method will do the moving of a white piece and calls the reccursive function.
 ; Input:
@@ -685,7 +708,6 @@ beq noEatB
 mov #0, @2.(sp) ; Removing eaten piece
 
 noEatB:
-
 ; Backing up registers before calling the REC function.
 mov r0, -(sp) ; Backing up r0.
 mov r1, -(sp) ; Backing up r1.
@@ -872,11 +894,11 @@ add r3, r2 ; Adding the number of bits needed in order to point to a start of a 
 add r5, r2 ; Adding the number of bits needed in order to point a cell in a row.
 ; r2 will now contain the address of the current cell.
 cmp (r2), #1 ; Checking if the current piece is white.
-bne skipcell1 ; If the color of the current piece is not white skip to the next cell.
+bne SkipCell ; If the color of the current piece is not white skip to the next cell.
 mov r0, r3 ; Setting r3 to the current row index (after changing it earlier).
 sub #1, r3 ; Reducing row index by 1.
 cmp r3, #0
-blt skipcell1 ; If row index is less than 0, cannot move left or right, skip to the next cell.
+blt SkipCell ; If row index is less than 0, cannot move left or right, skip to the next cell.
 mov r1, r5 ; Setting r5 to the current column index (after changing it eariler).
 add #1, r5 ; Increasing column index by 1.
 cmp r5, #7
@@ -907,7 +929,6 @@ bne jLeftW01 ; If the cell is not empty, cannot eat. Check legal moves to the le
 add #1, 12.(sp) ;If we got here, can eat, adding 1 to number of legal moves.
 br EndCnt ;Found a legal move.
 
-
 jLeftW01:
 ; This method will check legal moves to the left of white pieces.
 ; r2- current cell pointer.
@@ -919,9 +940,9 @@ sub #1, r3 ; Reducing row index by 1.
 mov r1, r5 ; Putting index of the current column in r5.
 sub #1, r5 ; Reducing column index by 1.
 cmp r5, #0
-blt skipcell1 ; If column index is less than 0, cannot move right, skip to the next cell.
+blt SkipCell ; If column index is less than 0, cannot move right, skip to the next cell.
 cmp -18.(r2), #1 ; Checking if the upper left piece is white.
-beq skipcell1 ; If the upper left piece is white, cannot move there, skip to the next cell.
+beq SkipCell ; If the upper left piece is white, cannot move there, skip to the next cell.
 cmp -18.(r2), #2 ; Checking if the upper left piece is black.
 beq eatlw1 ; If the upper left piece is black, Check if the white piece can eat it.
 add #1, 12.(sp) ; If we got here, upper left cell contains 0, can move there. Adding 1 to number of legal moves..
@@ -935,13 +956,13 @@ eatlw1:
 
 sub #1, r5 ; Reducing column index by 1.
 cmp r5, #0
-blt skipcell1 ; If column index is less than 0, cannot eat, skip to the next cell.
+blt SkipCell ; If column index is less than 0, cannot eat, skip to the next cell.
 sub #1, r3 ; Reducing row index by 1.
 cmp r3, #0
-blt skipcell1 ; If r3 is less than 0, cannot eat (out of bounds). Skip to the next cell.
+blt SkipCell ; If r3 is less than 0, cannot eat (out of bounds). Skip to the next cell.
 ;If we got here, the cell which the current white piece should be placed after eating is in the board bounds, Check if it is empty.
 cmp -36.(r2), #0 ; Checking if the cell is empty.
-bne skipcell1 ;If the cell is not empty, cannot eat. Skip to the next cell.
+bne SkipCell ;If the cell is not empty, cannot eat. Skip to the next cell.
 add #1, 12.(sp) ;If we got here, can eat, adding 1 to legal number of moves on the stack.
 br EndCnt ;Found a legal move.
 
@@ -953,7 +974,7 @@ mov (sp)+, r1 ; Returning r1 it's original value.
 mov (sp)+, r0 ; Returning r0 it's original value.
 rts pc ; When we return from this subroutine the output will be at the top of the stack
 
-skipcell1:
+SkipCell:
 ; This method will skip to the next cell by adding 1 to column index. If column
 ; index is bigger than 7 sets it to 0 and adds 1 to row index.
 ; r0 - Current row index.
@@ -961,18 +982,17 @@ skipcell1:
 
 add #1, r1
 cmp r1, #8 ; Checking if passed end of row.
-blt inRange1 ; Index of column is legal.
+blt RangeOK ; Index of column is legal.
 clr r1 ; If we got here index of column passed end of row. Set it to 0.
 add #1, r0 ; Go to the next row.
 cmp r0, #7
 bgt EndCnt ; If index of row is bigger than 7 we reached the end of the board.
 
-inRange1:
+RangeOK:
 ;Continue on checking in the same row.
 cmp 14.(sp), #1
 bne cntBlack
 br cntWhite
-
 
 cntBlack:
 ; This method will check legal moves of all black pieces.
@@ -989,11 +1009,11 @@ add r3, r2 ;Adding the number of bits needed in order to point to a start of a r
 add r5, r2 ; Adding the number of bits needed in order to point a cell in a row.
 ; r2 will now contain the address of the current cell.
 cmp (r2), #2 ; Checking if the current piece is black.
-bne skipcell1 ; If the color of the current piece is not black skip to the next cell.
+bne SkipCell ; If the color of the current piece is not black skip to the next cell.
 mov r0, r3 ; Putting index of the current row in r3.
 add #1, r3 ; Increasing row index by 1.
 cmp r3, #7
-bgt skipcell1 ; If row index is bigger than 7, cannot move left, skip to the next cell.
+bgt SkipCell ; If row index is bigger than 7, cannot move left, skip to the next cell.
 mov r1, r5 ; Setting r5 to the current column index (after changing it eariler).
 add #1, r5 ; Increasing column index by 1.
 cmp r5, #7
@@ -1034,14 +1054,13 @@ add #1, r3 ; Increasing row index by 1.
 mov r1, r5 ; Putting index of the current column in r5.
 sub #1, r5 ; Decreasing column index by 1.
 cmp r5, #0
-blt skipcell1 ; If column index is less than 0, cannot move right, skip to the next cell.
+blt SkipCell ; If column index is less than 0, cannot move right, skip to the next cell.
 cmp 14.(r2), #2 ; Checking if the lower left piece is black.
-beq skipcell1 ; If the lower left piece is white, cannot move there, skip to the next cell.
+beq SkipCell ; If the lower left piece is white, cannot move there, skip to the next cell.
 cmp 14.(r2), #1 ; Checking if the lower left piece is white.
 beq eatrb1 ; If the lower left piece is white, check if the black piece can eat it.
 add #1, 12.(sp) ; If we got here the lower left cell contains 0, the black piece can move there. Adding 1 to number of legal moves.
 br EndCnt ;Found a legal move.
-
 
 eatrb1:
 ; This method will check an eating option the right of black pieces.
@@ -1051,17 +1070,16 @@ eatrb1:
 
 sub #1, r5 ; Reducing column index by 1.
 cmp r5, #0
-blt skipcell1 ; If column index is less than 0, cannot eat, skip to the next cell.
+blt SkipCell ; If column index is less than 0, cannot eat, skip to the next cell.
 add #1, r3 ; Increasing row index by 1.
 cmp r3, #7
-bgt skipcell1 ; If r3 is bigger than 7, cannot eat (out of bounds). Skip to the next cell.
+bgt SkipCell ; If r3 is bigger than 7, cannot eat (out of bounds). Skip to the next cell.
 ;If we got here, the cell which the current white piece should be placed after eating is in the board bounds, Check if it is empty.
 cmp 28.(r2), #0 ; Checking if the cell is empty.
-bne skipcell1 ;If the cell is not empty, cannot eat. Skip to the next cell.
+bne SkipCell ;If the cell is not empty, cannot eat. Skip to the next cell.
 add #1, 12.(sp) ;If we got here, can eat. Adding 1 to number of legal moves.
 br EndCnt ;Found a legal move.
 ; END OF countMov
-
 
 .=torg+7000
 
