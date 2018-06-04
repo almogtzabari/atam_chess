@@ -1076,6 +1076,6 @@ Board:
 .word 0,0,0,0,0,0,0,0
 Player:.word 2
 Steps:.word 3
-WP: .word 0
+WinParam: .word 0
 SrcPos: .word 0
 DstPos: .word 0
