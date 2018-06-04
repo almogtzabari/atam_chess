@@ -860,7 +860,7 @@ mov (sp)+, r0 ; Restoring the value of r0.
 rts pc
 ; END OF countWB
 
-; This method checks the number of moves for a given player.
+; This method checks the given player has at least one legal move.
 ; Input:
 ; A number of player to check, will be at 2(sp).
 ; Output:
