@@ -86,8 +86,8 @@ jchkMov:
 ; Checking if the current player has legal moves to make:
 mov 4(sp), -(sp) ; Moving current player to the top of the stack.
 mov #0, -(sp) ; Allocating a place for output.
-jsr pc, moveChk
-mov (sp)+, (sp) ; Writing the output of moveChk instead of current player (override).
+jsr pc, countMov
+mov (sp)+, (sp) ; Writing the output of countMov instead of current player (override).
 tst (sp)+  ; Checks if number of legal moves of current player is 0 and pops it.
 bne chkMoves ; Jumps if he has moves to make.
 ; If we got here the current player has no legal moves and we need to skip his turn.
@@ -473,11 +473,11 @@ not0: ; We get here if the number of both player's pieces is not 0.
 mov #1, -(sp) ; Moving number of white player to check number of moves for him.
 mov #0, -(sp) ; Allocating place for number of moves and setting it to 0.
 ; Checking if there is legal moves for the given player.
-jsr pc, moveChk ; Number of legal moves for white player will be at the top of the stack.
+jsr pc, countMov ; Number of legal moves for white player will be at the top of the stack.
 tst (sp) ; Checks if white player has legal moves to make.
 bne hasMoves ; There are still moves to make.
 mov #2, 2(sp) ; Moving number of black player to check number of moves for him.
-jsr pc, moveChk ; Number of legal moves for black player will be at the top of the stack.
+jsr pc, countMov ; Number of legal moves for black player will be at the top of the stack.
 tst (sp) ; Checks if both players has legal moves to make.
 bne hasMoves ; One of the players still has moves to make.
 tst (sp)+ ; Pops number of player's moves.
@@ -542,7 +542,7 @@ rts pc
 ; 1. WhiteMov
 ; 2. Blackmov
 ; 3. countWB
-; 4. moveChk
+; 4. countMov
 
 ; This method will do the moving of a white piece and calls the reccursive function.
 ; Input:
@@ -619,8 +619,8 @@ mov #2., @2.(sp) ; Restoring eaten black piece.
 br SrcDst
 
 SrcDst:
-mov r2, 18.(sp) ; Updating father src.
-mov 4(sp), 16.(sp) ; Updating father dest.
+mov r2, 18.(sp) ; Updating father's SrcPos.
+mov 4(sp), 16.(sp) ; Updating father's DstPos.
 rts pc
 
 nSrcDst:
@@ -744,8 +744,8 @@ mov #1., @2.(sp) ; Restoring eaten white piece.
 br SrcDstB
 
 SrcDstB:
-mov r2, 18.(sp) ; Updating father src.
-mov 4(sp), 16.(sp) ; Updating father dest.
+mov r2, 18.(sp) ; Updating father's SrcPos.
+mov 4(sp), 16.(sp) ; Updating father's DstPos.
 rts pc
 
 nSrcDstB:
@@ -844,12 +844,12 @@ rts pc
 ; END OF countWB
 
 
-;This method checks the number of moves for  a given player.
-;Input:
-; - A number of player to check, will be at 2(sp).
+; This method checks the number of moves for a given player.
+; Input:
+; A number of player to check, will be at 2(sp).
 ;Output:
-; - A number of moves to add to, will be at (sp).
-moveChk:
+; A number of moves to add to, will be at (sp).
+countMov:
 ; r0 - Current row index.
 ; r1 - Current column index.
 mov r0, -(sp) ; Saving r0's value on stack.
@@ -860,12 +860,12 @@ mov r5, -(sp); Saving r5's value on stack
 clr r0 ; Sets r0 to 0.
 clr r1 ; Sets r1 to 0.
 cmp 14.(sp), #1 ; Checking if the current color is white.
-bne Black1 ; If the color is not white, branch to Black.
-br White1 ; If the color is white, branch to White.
+bne cntBlack ; If the color is not white, branch to Black.
+br cntWhite ; If the color is white, branch to White.
 
 
 
-White1:
+cntWhite:
 ; This method will check legal moves of all white pieces and add 1 to NumMoves each time a legal move is found.
 ; r2- current cell pointer.
 ; r3 - temporary row index (will be used once for another calculation).
@@ -978,11 +978,11 @@ bgt End1 ; If index of row is bigger than 7 we reached the end of the board.
 inRange1:
 ;Continue on checking in the same row.
 cmp 14.(sp), #1
-bne Black1
-br White1
+bne cntBlack
+br cntWhite
 
 
-Black1:
+cntBlack:
 ;This method will check legal moves of all black pieces and add 1 to NumMoves each time a legal move is found.
 ; r2- current cell pointer.
 ; r3 - temporary row index (will be used once for another calculation).
@@ -1069,7 +1069,7 @@ bne skipcell1 ;If the cell is not empty, cannot eat. Skip to the next cell.
 add #1, 12.(sp) ;If we got here, can eat. Adding 1 to number of legal moves.
 br End1 ;Found a legal move.
 
-; END OF moveChk
+; END OF countMov
 
 
 .=torg+7000
