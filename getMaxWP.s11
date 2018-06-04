@@ -539,10 +539,10 @@ rts pc
 ; END OF calcWP
 
 ; ----- HELPING FUNCTIONS -----
-; 1. WhiteMov
-; 2. Blackmov
-; 3. countWB
-; 4. countMov
+; 1. WhiteMov - Making a move for white piece and calls the recursive function.
+; 2. Blackmov - Making a move for black piece and calls the recursive function.
+; 3. countWB - Counting number of pieces from each color.
+; 4. countMov - Counting the legal moves of a given player in a given board.
 
 ; This method will do the moving of a white piece and calls the reccursive function.
 ; Input:
@@ -561,7 +561,6 @@ beq noEat
 mov #0, @2.(sp) ; Removing eaten piece
 
 noEat:
-
 ; Backing up registers before calling the REC function.
 mov r0, -(sp) ; Backing up r0.
 mov r1, -(sp) ; Backing up r1.
@@ -797,16 +796,13 @@ br nSrcDstB ; No need to update src and dst.
 
 ; This method will count how many vessles from each color are there on the
 ; given board.
-;
 ; Input:
 ; Label of the beginning of the board - will be stored at 2(sp).
-;
 ; Output:
 ; Number of white vessels - after rts will be stored at 4(sp).
 ; Number of black vessels - after rts will be stored at 2(sp).
 ;
-; Notice: after rts 0(sp) will store the label of the board which is usually no
-; longer needed.
+; Notice: after rts 0(sp) will store the label of the board.
 countWB:
 mov r0, -(sp) ; Backing up r0. r0 will be used to scan the board.
 mov r1, -(sp) ; Backing up r1. r1 will be used to count white vessels.
@@ -840,14 +836,12 @@ mov (sp)+, r2 ; Restoring the value of r2.
 mov (sp)+, r1 ; Restoring the value of r1.
 mov (sp)+, r0 ; Restoring the value of r0.
 rts pc
-
 ; END OF countWB
-
 
 ; This method checks the number of moves for a given player.
 ; Input:
 ; A number of player to check, will be at 2(sp).
-;Output:
+; Output:
 ; A number of moves to add to, will be at (sp).
 countMov:
 ; r0 - Current row index.
@@ -863,10 +857,8 @@ cmp 14.(sp), #1 ; Checking if the current color is white.
 bne cntBlack ; If the color is not white, branch to Black.
 br cntWhite ; If the color is white, branch to White.
 
-
-
 cntWhite:
-; This method will check legal moves of all white pieces and add 1 to NumMoves each time a legal move is found.
+; This method will check legal moves of all white pieces.
 ; r2- current cell pointer.
 ; r3 - temporary row index (will be used once for another calculation).
 ; r5 - temporary column index (will be used once for another calculation).
@@ -894,7 +886,7 @@ beq jLeftW01 ; If the upper right piece is white, cannot go there, check legal m
 cmp -14.(r2), #2 ; Checking if the upper right piece is black.
 beq eatrw1 ; If the upper right piece is black, check if the white piece can eat it.
 add #1, 12.(sp) ; If we got here the upper right cell contains 0, the white piece can move there. Adding 1 to number of legal moves.
-br End1 ;Found a legal move.
+br EndCnt ;Found a legal move.
 
 
 eatrw1:
@@ -913,7 +905,7 @@ bgt jLeftW01 ; If column index is bigger than 7, cannot eat (out of bounds). Che
 cmp -28.(r2), #0 ; Checking if the cell is empty.
 bne jLeftW01 ; If the cell is not empty, cannot eat. Check legal moves to the left.
 add #1, 12.(sp) ;If we got here, can eat, adding 1 to number of legal moves.
-br End1 ;Found a legal move.
+br EndCnt ;Found a legal move.
 
 
 jLeftW01:
@@ -933,7 +925,7 @@ beq skipcell1 ; If the upper left piece is white, cannot move there, skip to the
 cmp -18.(r2), #2 ; Checking if the upper left piece is black.
 beq eatlw1 ; If the upper left piece is black, Check if the white piece can eat it.
 add #1, 12.(sp) ; If we got here, upper left cell contains 0, can move there. Adding 1 to number of legal moves..
-br End1 ;Found a legal move.
+br EndCnt ;Found a legal move.
 
 eatlw1:
 ;This method will check an eating option the left of white pieces.
@@ -951,9 +943,9 @@ blt skipcell1 ; If r3 is less than 0, cannot eat (out of bounds). Skip to the ne
 cmp -36.(r2), #0 ; Checking if the cell is empty.
 bne skipcell1 ;If the cell is not empty, cannot eat. Skip to the next cell.
 add #1, 12.(sp) ;If we got here, can eat, adding 1 to legal number of moves on the stack.
-br End1 ;Found a legal move.
+br EndCnt ;Found a legal move.
 
-End1: ;If we got here we checked all the cells of the array or we got a legal move.
+EndCnt: ;If we got here we checked all the cells of the array or we got a legal move.
 mov (sp)+, r5 ; Returning r5 it's original value.
 mov (sp)+, r3 ; Returning r3 it's original value.
 mov (sp)+, r2 ; Returning r2 it's original value.
@@ -973,7 +965,7 @@ blt inRange1 ; Index of column is legal.
 clr r1 ; If we got here index of column passed end of row. Set it to 0.
 add #1, r0 ; Go to the next row.
 cmp r0, #7
-bgt End1 ; If index of row is bigger than 7 we reached the end of the board.
+bgt EndCnt ; If index of row is bigger than 7 we reached the end of the board.
 
 inRange1:
 ;Continue on checking in the same row.
@@ -983,7 +975,7 @@ br cntWhite
 
 
 cntBlack:
-;This method will check legal moves of all black pieces and add 1 to NumMoves each time a legal move is found.
+; This method will check legal moves of all black pieces.
 ; r2- current cell pointer.
 ; r3 - temporary row index (will be used once for another calculation).
 ; r5 - temporary column index (will be used once for another calculation).
@@ -1011,7 +1003,7 @@ beq RightB1 ; If the lower right piece is black, cannot go there, Check legal mo
 cmp 18.(r2), #1 ; Checking if the lower right piece is black.
 beq eatlb1 ; If the lower right piece is white, check if the black piece can eat it.
 add #1, 12.(sp) ; If we got here the lower right cell contains 0, the black piece can move there. Adding 1 to number of legal moves.
-br End1 ;Found a legal move.
+br EndCnt ;Found a legal move.
 
 eatlb1:
 ;This method will check an eating option the left of black pieces.
@@ -1029,7 +1021,7 @@ bgt RightB1 ; If column index is bigger than 7, cannot eat (out of bounds). Chec
 cmp 36.(r2), #0 ; Checking if the cell is empty.
 bne RightB1 ; If the cell is not empty, cannot eat. Check legal moves to the right.
 add #1, 12.(sp) ;If we got here, can eat. Adding 1 to number of legal moves.
-br End1 ;Found a legal move.
+br EndCnt ;Found a legal move.
 
 RightB1:
 ; This method will check legal moves to the right of black pieces.
@@ -1048,7 +1040,7 @@ beq skipcell1 ; If the lower left piece is white, cannot move there, skip to the
 cmp 14.(r2), #1 ; Checking if the lower left piece is white.
 beq eatrb1 ; If the lower left piece is white, check if the black piece can eat it.
 add #1, 12.(sp) ; If we got here the lower left cell contains 0, the black piece can move there. Adding 1 to number of legal moves.
-br End1 ;Found a legal move.
+br EndCnt ;Found a legal move.
 
 
 eatrb1:
@@ -1067,8 +1059,7 @@ bgt skipcell1 ; If r3 is bigger than 7, cannot eat (out of bounds). Skip to the 
 cmp 28.(r2), #0 ; Checking if the cell is empty.
 bne skipcell1 ;If the cell is not empty, cannot eat. Skip to the next cell.
 add #1, 12.(sp) ;If we got here, can eat. Adding 1 to number of legal moves.
-br End1 ;Found a legal move.
-
+br EndCnt ;Found a legal move.
 ; END OF countMov
 
 
