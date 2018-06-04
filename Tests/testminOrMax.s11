@@ -15,6 +15,7 @@ main:
 mov #main, sp ; setting the stack
 mov #Player, -(sp)
 mov #2, -(sp)
+jsr pc, minOrMax
 halt
 
 minOrMax:
