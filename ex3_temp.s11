@@ -1080,20 +1080,19 @@ bne SkipCell ;If the cell is not empty, cannot eat. Skip to the next cell.
 add #1, 12.(sp) ;If we got here, can eat. Adding 1 to number of legal moves.
 br canMove ;Found a legal move.
 ; END OF hasMove
+.=torg+11000
+Board:	.word	0, 0, 0, 0, 0, 0, 0, 0
+				.word	0, 0, 0, 0, 0, 0, 0, 0
+				.word	0, 0, 0, 0, 0, 0, 0, 0
+				.word	0, 0, 2, 0, 0, 0, 0, 0
+				.word	0, 0, 0, 1, 0, 0, 0, 0
+				.word	0, 0, 0, 0, 1, 0, 0, 0
+				.word	0, 0, 0, 0, 0, 0, 0, 0
+				.word	0, 0, 0, 0, 0, 0, 0, 0
+Player:	.word	1
+Steps:  .word   2
 
-.=torg+7000
-
-Board:
-.word 0,0,0,0,0,0,0,0
-.word 0,0,2,0,2,0,0,0
-.word 0,0,0,1,0,0,0,0
-.word 0,0,0,0,2,0,0,0
-.word 0,0,0,1,0,0,0,0
-.word 0,0,1,0,1,0,0,0
-.word 0,0,0,0,0,2,0,0
-.word 0,0,0,0,0,0,0,0
-Player:.word 1
-Steps:.word 3
-WinParam: .word 0
-SrcPos: .word 0
-DstPos: .word 0
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1 
