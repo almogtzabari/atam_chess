@@ -1,0 +1,37 @@
+; This method checks whether we need to look for maximum WP or for minimum WP.
+;
+; Input:
+; 1. Current player - will be stored at 2(sp).
+; 2. Label of the player we check for - will be stored at 4(sp).
+;
+; Output:
+;  1  for maximum.
+; -1  for minimum.
+; The output will be stored at r4.
+;
+
+.=torg+1000
+main:
+mov #main, sp ; setting the stack
+mov #Player, -(sp)
+mov #2, -(sp)
+jsr pc, minOrMax
+halt
+
+minOrMax:
+   cmp 2(sp), @4(sp) ; Comparing current player and the player we check.
+   beq needmax ; if current player is the player we check - go to endmom.
+   ; If we got here then the current player is not the one we check for,
+   ; therefore we need minimum.
+   needmin:
+           mov #-1., r4 ; r4 = -1.
+           rts pc
+   needmax:
+           mov #1, r4 ; r4 = 1.
+           rts pc
+
+
+
+.=torg+5000
+
+Player:.word 2
