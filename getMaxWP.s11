@@ -108,8 +108,8 @@ jchkMov:
 ; Checking if the current player has legal moves to make:
 mov 4(sp), -(sp) ; Moving current player to the top of the stack.
 mov #0, -(sp) ; Allocating a place for output.
-jsr pc, countMov
-mov (sp)+, (sp) ; Writing the output of countMov instead of current player (override).
+jsr pc, hasMove
+mov (sp)+, (sp) ; Writing the output of hasMove instead of current player (override).
 tst (sp)+  ; Checks if number of legal moves of current player is 0 and pops it.
 bne chkMoves ; Jumps if he has moves to make.
 ; If we got here the current player has no legal moves and we need to skip his turn.
@@ -495,11 +495,11 @@ not0: ; We get here if the number of both player's pieces is not 0.
 mov #1, -(sp) ; Moving number of white player to check number of moves for him.
 mov #0, -(sp) ; Allocating place for number of moves and setting it to 0.
 ; Checking if there is legal moves for the given player.
-jsr pc, countMov ; Number of legal moves for white player will be at the top of the stack.
+jsr pc, hasMove ; Number of legal moves for white player will be at the top of the stack.
 tst (sp) ; Checks if white player has legal moves to make.
 bne hasMoves ; There are still moves to make.
 mov #2, 2(sp) ; Moving number of black player to check number of moves for him.
-jsr pc, countMov ; Number of legal moves for black player will be at the top of the stack.
+jsr pc, hasMove ; Number of legal moves for black player will be at the top of the stack.
 tst (sp) ; Checks if both players has legal moves to make.
 bne hasMoves ; One of the players still has moves to make.
 tst (sp)+ ; Pops number of player's moves.
@@ -564,7 +564,7 @@ rts pc
 ; 1. WhiteMov - Making a move for white piece and calls the recursive function.
 ; 2. Blackmov - Making a move for black piece and calls the recursive function.
 ; 3. countWB - Counting number of pieces from each color.
-; 4. countMov - Counting the legal moves of a given player in a given board.
+; 4. hasMove - Counting the legal moves of a given player in a given board.
 ;----------------------------------------------------------------------
 
 ; This method will do the moving of a white piece and calls the reccursive function.
@@ -865,7 +865,7 @@ rts pc
 ; A number of player to check, will be at 2(sp).
 ; Output:
 ; A number of moves to add to, will be at (sp).
-countMov:
+hasMove:
 ; r0 - Current row index.
 ; r1 - Current column index.
 mov r0, -(sp) ; Saving r0's value on stack.
@@ -876,10 +876,10 @@ mov r5, -(sp); Saving r5's value on stack
 clr r0 ; Sets r0 to 0.
 clr r1 ; Sets r1 to 0.
 cmp 14.(sp), #1 ; Checking if the current color is white.
-bne cntBlack ; If the color is not white, branch to Black.
-br cntWhite ; If the color is white, branch to White.
+bne chkBlack ; If the color is not white, branch to Black.
+br chkWhite ; If the color is white, branch to White.
 
-cntWhite:
+chkWhite:
 ; This method will check legal moves of all white pieces.
 ; r2- current cell pointer.
 ; r3 - temporary row index (will be used once for another calculation).
@@ -908,7 +908,7 @@ beq jLeftW01 ; If the upper right piece is white, cannot go there, check legal m
 cmp -14.(r2), #2 ; Checking if the upper right piece is black.
 beq eatrw1 ; If the upper right piece is black, check if the white piece can eat it.
 add #1, 12.(sp) ; If we got here the upper right cell contains 0, the white piece can move there. Adding 1 to number of legal moves.
-br EndCnt ;Found a legal move.
+br canMove ;Found a legal move.
 
 
 eatrw1:
@@ -927,7 +927,7 @@ bgt jLeftW01 ; If column index is bigger than 7, cannot eat (out of bounds). Che
 cmp -28.(r2), #0 ; Checking if the cell is empty.
 bne jLeftW01 ; If the cell is not empty, cannot eat. Check legal moves to the left.
 add #1, 12.(sp) ;If we got here, can eat, adding 1 to number of legal moves.
-br EndCnt ;Found a legal move.
+br canMove ;Found a legal move.
 
 jLeftW01:
 ; This method will check legal moves to the left of white pieces.
@@ -946,7 +946,7 @@ beq SkipCell ; If the upper left piece is white, cannot move there, skip to the 
 cmp -18.(r2), #2 ; Checking if the upper left piece is black.
 beq eatlw1 ; If the upper left piece is black, Check if the white piece can eat it.
 add #1, 12.(sp) ; If we got here, upper left cell contains 0, can move there. Adding 1 to number of legal moves..
-br EndCnt ;Found a legal move.
+br canMove ;Found a legal move.
 
 eatlw1:
 ;This method will check an eating option the left of white pieces.
@@ -964,9 +964,9 @@ blt SkipCell ; If r3 is less than 0, cannot eat (out of bounds). Skip to the nex
 cmp -36.(r2), #0 ; Checking if the cell is empty.
 bne SkipCell ;If the cell is not empty, cannot eat. Skip to the next cell.
 add #1, 12.(sp) ;If we got here, can eat, adding 1 to legal number of moves on the stack.
-br EndCnt ;Found a legal move.
+br canMove ;Found a legal move.
 
-EndCnt: ;If we got here we checked all the cells of the array or we got a legal move.
+canMove: ;If we got here we checked all the cells of the array or we got a legal move.
 mov (sp)+, r5 ; Returning r5 it's original value.
 mov (sp)+, r3 ; Returning r3 it's original value.
 mov (sp)+, r2 ; Returning r2 it's original value.
@@ -986,15 +986,15 @@ blt RangeOK ; Index of column is legal.
 clr r1 ; If we got here index of column passed end of row. Set it to 0.
 add #1, r0 ; Go to the next row.
 cmp r0, #7
-bgt EndCnt ; If index of row is bigger than 7 we reached the end of the board.
+bgt canMove ; If index of row is bigger than 7 we reached the end of the board.
 
 RangeOK:
 ;Continue on checking in the same row.
 cmp 14.(sp), #1
-bne cntBlack
-br cntWhite
+bne chkBlack
+br chkWhite
 
-cntBlack:
+chkBlack:
 ; This method will check legal moves of all black pieces.
 ; r2- current cell pointer.
 ; r3 - temporary row index (will be used once for another calculation).
@@ -1023,7 +1023,7 @@ beq RightB1 ; If the lower right piece is black, cannot go there, Check legal mo
 cmp 18.(r2), #1 ; Checking if the lower right piece is black.
 beq eatlb1 ; If the lower right piece is white, check if the black piece can eat it.
 add #1, 12.(sp) ; If we got here the lower right cell contains 0, the black piece can move there. Adding 1 to number of legal moves.
-br EndCnt ;Found a legal move.
+br canMove ;Found a legal move.
 
 eatlb1:
 ;This method will check an eating option the left of black pieces.
@@ -1041,7 +1041,7 @@ bgt RightB1 ; If column index is bigger than 7, cannot eat (out of bounds). Chec
 cmp 36.(r2), #0 ; Checking if the cell is empty.
 bne RightB1 ; If the cell is not empty, cannot eat. Check legal moves to the right.
 add #1, 12.(sp) ;If we got here, can eat. Adding 1 to number of legal moves.
-br EndCnt ;Found a legal move.
+br canMove ;Found a legal move.
 
 RightB1:
 ; This method will check legal moves to the right of black pieces.
@@ -1060,7 +1060,7 @@ beq SkipCell ; If the lower left piece is white, cannot move there, skip to the 
 cmp 14.(r2), #1 ; Checking if the lower left piece is white.
 beq eatrb1 ; If the lower left piece is white, check if the black piece can eat it.
 add #1, 12.(sp) ; If we got here the lower left cell contains 0, the black piece can move there. Adding 1 to number of legal moves.
-br EndCnt ;Found a legal move.
+br canMove ;Found a legal move.
 
 eatrb1:
 ; This method will check an eating option the right of black pieces.
@@ -1078,21 +1078,21 @@ bgt SkipCell ; If r3 is bigger than 7, cannot eat (out of bounds). Skip to the n
 cmp 28.(r2), #0 ; Checking if the cell is empty.
 bne SkipCell ;If the cell is not empty, cannot eat. Skip to the next cell.
 add #1, 12.(sp) ;If we got here, can eat. Adding 1 to number of legal moves.
-br EndCnt ;Found a legal move.
-; END OF countMov
+br canMove ;Found a legal move.
+; END OF hasMove
 
 .=torg+7000
 
 Board:
-.word 0,0,0,1,0,1,0,0
+.word 0,0,0,0,0,0,0,0
+.word 0,0,2,0,2,0,0,0
+.word 0,0,0,1,0,0,0,0
 .word 0,0,0,0,2,0,0,0
-.word 0,0,0,1,0,1,0,0
-.word 0,0,1,0,0,0,1,0
+.word 0,0,0,1,0,0,0,0
+.word 0,0,1,0,1,0,0,0
+.word 0,0,0,0,0,2,0,0
 .word 0,0,0,0,0,0,0,0
-.word 0,0,0,0,0,0,0,0
-.word 0,0,0,0,0,0,0,0
-.word 0,0,0,0,0,0,0,0
-Player:.word 2
+Player:.word 1
 Steps:.word 3
 WinParam: .word 0
 SrcPos: .word 0
