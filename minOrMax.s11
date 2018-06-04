@@ -10,13 +10,13 @@
 ; The output will be stored at r4.
 ;
 minOrMax:
-         cmp @2(sp), 4(sp) ; Comparing current player and the player we check.
+         cmp 2(sp), @4(sp) ; Comparing current player and the player we check.
          beq needmax ; if current player is the player we check - go to endmom.
          ; If we got here then the current player is not the one we check for,
          ; therefore we need minimum.
          needmin:
-                 mov -1, r4 ; r4 = -1.
+                 mov #-1., r4 ; r4 = -1.
                  rts pc
          needmax:
-                 mov 1, r4 ; r4 = 1.
+                 mov #1, r4 ; r4 = 1.
                  rts pc
