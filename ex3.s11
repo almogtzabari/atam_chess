@@ -171,12 +171,12 @@ whoWon:
 cmp (sp)+, Player ; Check if the current player is the one we check.
 bne playerLos ; Jumps if the winner is not who we check.
 ; The winner is the player we check. Updating WP to 20:
-mov #20., 10.(sp) ; WP = 20.
+mov #20, 10.(sp) ; WP = 20.
 tst (sp)+ ; Popping the no longer needed board from stack.
 rts pc
 playerLos:
 ;The winner is not the player we check. Updating WP to -20:
-mov #-20., 10.(sp) ; WP = -20.
+mov #-20, 10.(sp) ; WP = -20.
 tst (sp)+ ; Popping the no longer needed board from stack.
 rts pc
 ; --- END OF STOP TERMS ---

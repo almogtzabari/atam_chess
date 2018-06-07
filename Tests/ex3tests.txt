@@ -1,0 +1,528 @@
+;======================================
+;WinParam=20
+;SrcPos= 35
+;DstPos= 17
+.=torg+11000
+Board: 	.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 2, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 1, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 1, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+Player: .word 1
+Steps: .word 4
+
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+;======================================
+;======================================
+;WinParam=20
+;SrcPos= 44
+;DstPos= 44
+.=torg+11000
+Board: 	.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 1, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+Player: .word 1
+Steps: .word 4
+
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+;======================================
+
+
+;======================================
+;WinParam=-20
+;SrcPos= 26?
+;DstPos= 26?
+.=torg+11000
+Board: 	.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 2, 0, 0, 0, 0, 0
+		.word 0, 1, 0, 1, 0, 0, 0, 0
+		.word 1, 0, 0, 0, 1, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+Player: .word 2
+Steps: .word 3
+
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+;======================================
+
+;======================================
+;WinParam=-1
+;SrcPos= 36
+;DstPos= 29
+.=torg+11000
+Board: 	.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 2, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 2, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 1, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+Player: .word 1
+Steps: .word 2
+
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+;======================================
+;======================================
+;WinParam=-20
+;SrcPos= 47
+;DstPos= 38
+.=torg+11000
+Board: 	.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 2
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 1
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+Player: .word 1
+Steps: .word 4
+
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+;======================================
+
+;======================================
+;WinParam=-20
+;SrcPos= 31
+;DstPos= 38
+.=torg+11000
+Board: 	.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 2
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 1
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+Player: .word 2
+Steps: .word 3
+
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+;======================================
+
+
+;======================================
+;WinParam=20
+;SrcPos= 54
+;DstPos= 47
+.=torg+11000
+Board: 	.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 2
+		.word 0, 0, 0, 1, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 1, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+Player: .word 1
+Steps: .word 4
+
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+;======================================
+
+;======================================
+;WinParam=0
+;SrcPos= 17
+;DstPos= 26
+.=torg+11000
+Board: 	.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 2, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 1
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+Player: .word 2
+Steps: .word 2
+
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+;======================================
+;======================================
+
+
+;WinParam=20
+;SrcPos= 32
+;DstPos= 25
+.=torg+11000
+Board: 	.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 2
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 1, 0, 0, 0, 0, 0, 0, 1
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+Player: .word 1
+Steps: .word 4
+
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+;======================================
+
+;======================================
+
+
+;WinParam=1
+;SrcPos= 58\49
+;DstPos= 51\42\40
+.=torg+11000
+Board: 	.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 2
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 1, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 1, 0, 0, 0, 0, 0
+Player: .word 1
+Steps: .word 5
+
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+;======================================
+
+
+;WinParam=0
+;SrcPos= 58
+;DstPos= 58
+.=torg+11000
+Board: 	.word 0, 0, 0, 0, 0, 0, 0, 1
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 2, 0, 0, 0, 0, 0
+Player: .word 2
+Steps: .word 5
+
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+
+;======================================
+;WinParam=1
+;SrcPos= 49
+;DstPos= 56
+.=torg+11000
+Board: 	.word 0, 0, 0, 0, 0, 0, 0, 1
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 2, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 2, 0, 0, 0, 0, 0
+Player: .word 2
+Steps: .word 5
+
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+
+;======================================
+;WinParam=20
+;SrcPos= 58
+;DstPos= 51/49
+.=torg+11000
+Board: 	.word 0, 1, 0, 1, 0, 0, 0, 2
+		.word 1, 0, 1, 0, 2, 0, 0, 0
+		.word 0, 1, 0, 0, 0, 1, 0, 1
+		.word 0, 0, 1, 0, 1, 0, 1, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 1, 0, 0, 0, 0, 0
+Player: .word 1
+Steps: .word 4
+
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+
+;======================================
+
+;WinParam=-5
+;SrcPos= 3
+;DstPos= 3
+.=torg+11000
+Board: 	
+		.word 0, 1, 0, 2, 0, 1, 0, 0
+		.word 0, 0, 1, 0, 1, 0, 0, 0
+		.word 0, 1, 0, 0, 0, 1, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+Player: .word 2
+Steps: .word 2
+
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+;======================================
+;======================================
+
+;WinParam=0
+;SrcPos= some black
+;DstPos= some move
+.=torg+11000
+Board: 	
+		.word 0, 1, 0, 2, 0, 1, 0, 0
+		.word 0, 0, 1, 0, 1, 0, 0, 0
+		.word 0, 1, 0, 0, 0, 1, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 2, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 2, 2, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 2, 0, 0
+		.word 0, 0, 2, 0, 0, 0, 0, 0
+Player: .word 2
+Steps: .word 2
+
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+;======================================
+
+;======================================
+
+;WinParam=0
+;SrcPos= 35
+;DstPos= 17
+.=torg+11000
+Board: 	
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 2, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 1, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 2, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+Player: .word 1
+Steps: .word 3
+
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+;======================================
+;======================================
+
+;WinParam=1
+;SrcPos= 26
+;DstPos= 33
+.=torg+11000
+Board: 	
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 2, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 1, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 2, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+Player: .word 2
+Steps: .word 3
+
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+;======================================
+;======================================
+
+;WinParam=20
+;SrcPos= 43
+;DstPos= 61
+.=torg+11000
+Board: 	
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 1, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 2, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 1, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 2
+Player: .word 2
+Steps: .word 3
+
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+;======================================
+;WinParam=-1
+;SrcPos= 50
+;DstPos= 43
+.=torg+11000
+Board: 	
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 1, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 2, 0, 2, 0, 0, 0, 0, 0
+		.word 0, 2, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 1, 0, 2, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+Player: .word 1
+Steps: .word 3
+
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+;======================================
+
+;WinParam=-3
+;SrcPos= 19
+;DstPos= 12
+.=torg+11000
+Board: 	
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 2, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 1, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 2, 2, 2, 0, 0
+Player: .word 1
+Steps: .word 2
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+
+;======================================
+;WinParam=-1
+;SrcPos= 19
+;DstPos= 26
+.=torg+11000
+Board: 	
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 2, 0, 2, 0, 0, 0, 0, 0
+		.word 0, 2, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 1, 0, 2, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 1, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+Player: .word 1
+Steps: .word 3
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+;===========================================
+;===========================================
+;WinParam=0
+;SrcPos= 14
+;DstPos= 28
+.=torg+11000
+Board: 	
+		.word 0, 0, 0, 1, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 2, 0
+		.word 0, 0, 0, 0, 0, 1, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 2, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 1, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+Player: .word 2
+Steps: .word 4
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
+;============================================
+;WinParam=-1
+;SrcPos= 14
+;DstPos= 28
+.=torg+11000
+Board: 	
+		.word 0, 0, 0, 1, 0, 0, 0, 1
+		.word 0, 0, 0, 0, 0, 0, 2, 0
+		.word 0, 0, 0, 0, 0, 1, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+		.word 0, 0, 0, 0, 2, 0, 0, 0
+		.word 0, 0, 0, 0, 0, 1, 0, 0
+		.word 0, 0, 0, 0, 0, 0, 0, 0
+Player: .word 2
+Steps: .word 4
+
+;output
+SrcPos: .blkw 1
+DstPos: .blkw 1
+WinParam: .blkw 1
