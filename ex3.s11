@@ -1,5 +1,12 @@
 
 .=torg+1000
+
+;-----------------------------------------------------------------------------//
+;                               Defines:                                      //
+;-----------------------------------------------------------------------------//
+ABSOLUTE_MIN = 100001
+ABSOLUTE_MAX = 011111
+
 main:
 mov #main, sp
 mov #SrcPos, -(sp)
@@ -25,7 +32,7 @@ getMaxWP:
 ; Preparing the stack for the first call.
 mov #0, -(sp) ; Allocating place source position in stack.
 mov #0, -(sp) ; Allocating place destenation position in stack.
-mov #-100., -(sp) ; Allocating place for WP in stack.
+mov #ABSOLUTE_MIN, -(sp) ; Allocating place for WP in stack.
 mov #1, -(sp) ;  Allocating place for minOrMax of the first player.
 mov Player, -(sp) ; Pushing the player we check to the stack.
 mov Steps, -(sp) ; Pushing number of steps to stack.
@@ -119,13 +126,13 @@ mov #0, -(sp) ; Allocating space for DstPos.
 cmp 10.(sp), #1 ; Checks what the caller function (father) was looking for.
 bne putMax ; Jumps if the father was looking for minimum.
 ; Father was looking for maximum. Now we should put minimum:
-mov #100., -(sp) ; Pushing wp. WP = MAX_VALUE
+mov #ABSOLUTE_MAX, -(sp) ; Pushing wp. WP = MAX_VALUE
 mov #-1., -(sp) ; Pushing -1. This means that we are looking for minimum now.
 jmp cont ; Done changing max->min.
 
 putMax:
 ; Father was looking for minimum. Now we should put maximum:
-mov #-100., -(sp) ; Pushing wp. WP = MIN_VALUE
+mov #ABSOLUTE_MIN, -(sp) ; Pushing wp. WP = MIN_VALUE
 mov #1., -(sp) ; Pushing -1. This means that we are looking for maximum now.
 
 cont:
@@ -560,6 +567,87 @@ add #4, sp ; popping 2 items from stack (counters of W&B pieces)
 rts pc
 ; END OF calcWP
 
+; This method will move a player from the source position to the destanation
+; position.
+;
+; Input:
+; 1. Source position - will be stored at r5 - inline
+; 2. Destanation position - will be stored at 2(r5) - inline
+; 3. Label of the board - will be stored at 2(sp).
+
+movPiece:
+         mov r1, -(sp) ; Backing up  r1.
+         mov r3, -(sp) ; Backing up  r3.
+         ; Now we will calculate the address of source position and put it in r1.
+         mov (r5)+, r1 ; r1 = index of source position
+         mul #2, r1 ; r1 = 2*r1 . This is in order to calculate the address.
+         add 6(sp), r1 ; r1 = r1 + address of beginning of the board.
+         ; Now we will calculate the address of dest position and put it in r3.
+         mov (r5)+, r3 ; r3 = index of destanation position
+         mul #2, r3 ; r3 = 2*r3 .  This is in order to calculate the address.
+         add 6(sp), r3 ; r3 = r3 + address of beginning of the board.
+
+         ; Making the changes.
+         mov (r1), (r3) ; board[dest] = board[source].
+         mov 0, (r1) ; board[source] = 0.
+
+         ; Now we need to check if there was an eat. We will find the address
+         ; in the middle between the source address and the dest address.
+         ; Notice that if there was an eat then the address of the eaten cell
+         ; is a multiply of 2 and is equal to: (src_addr + dest_addr)/2 .
+		     ; In that case we also need to put 0 in that place.
+         ; If there was no eat then the address of the middle cell is not a
+         ; multiply of 2 and so we need to finish the function.
+         mov r0, -(sp) ; Backing up r0.
+		     clr r0
+         add r3, r1 ; r1 = source address + dest address
+         div #2, r0  ; r0 will hold the address of the eaten cell in case of eat.
+		     mov r0, -(sp) ; Backing up the address of the eaten cell.
+         ; Now we have the potenitally eaten cell address. we need to check if
+         ; that eaten cell address is a multiply of 2.
+		     clr r0
+		     mov (sp), r1 ; r1 = eaten cell address.
+	    	 div #2, r0 ; r1 will hold the remainer.
+         cmp r1, 0 ;
+         bne endmop ; if the remainer is not zero there was no eat. goto endmop.
+         ; If we got here then the remainer is zero. it means that there was an
+         ; eat and we need to put 0 in the eaten place.
+         ; Notice that the eaten cell address is at sp.
+         mov 0, @(sp)
+         ; Method is done. Restoring registers.
+         endmop:
+				tst (sp)+ ; popping the eaten cell address (no longer needed).
+                mov (sp)+, r0 ; Restoring value of r0.
+                mov (sp)+, r3 ; Restoring value of r4.
+                mov (sp)+, r1 ; Restoring value of r3.
+                rts r5
+; END OF MovePiece
+
+; This method checks whether we need to look for maximum WP or for minimum WP.
+;
+; Input:
+; 1. Current player - will be stored at 2(sp).
+; 2. Label of the player we check for - will be stored at 4(sp).
+;
+; Output:
+;  1  for maximum.
+; -1  for minimum.
+; The output will be stored at r4.
+;
+minOrMax:
+         cmp 2(sp), @4(sp) ; Comparing current player and the player we check.
+         beq needmax ; if current player is the player we check - go to endmom.
+         ; If we got here then the current player is not the one we check for,
+         ; therefore we need minimum.
+         needmin:
+                 mov #-1., r4 ; r4 = -1.
+                 rts pc
+         needmax:
+                 mov #1, r4 ; r4 = 1.
+                 rts pc
+
+; END OF minOrMax
+
 ; ------------------------- HELPING FUNCTIONS -------------------------
 ; 1. WhiteMov - Making a move for white piece and calls the recursive function.
 ; 2. Blackmov - Making a move for black piece and calls the recursive function.
@@ -598,12 +686,12 @@ cmp #1, 26.(sp) ; Checking if minimum or maximum was checked in the last call.
 beq chngMin ; Changing maximum to minimum.
 
 ; If we got here in the next REC we will check for maximum
-mov #-100., -(sp) ; Miminum was checked in the last call.
+mov #ABSOLUTE_MIN, -(sp) ; Miminum was checked in the last call.
 mov #1, -(sp) ; Maximum will be checked.
 br changed
 
 chngMin: ; Changing maximum to minimum.
-mov #100., -(sp) ; Maximum was checked in the last call.
+mov #ABSOLUTE_MAX, -(sp) ; Maximum was checked in the last call.
 mov #-1., -(sp) ; Minimum will be checked.
 
 changed: ; Changed maximum\minimum value.
@@ -722,12 +810,12 @@ cmp #1, 26.(sp) ; Checking if minimum or maximum was checked in the last call.
 beq chngMinB ; Changing maximum to minimum.
 
 ; If we got here in the next REC we will check for maximum
-mov #-100., -(sp) ; Miminum was checked in the last call.
+mov #ABSOLUTE_MIN, -(sp) ; Miminum was checked in the last call.
 mov #1, -(sp) ; Maximum will be checked.
 br changedB
 
 chngMinB: ; Changing maximum to minimum.
-mov #100., -(sp) ; Maximum was checked in the last call.
+mov #ABSOLUTE_MAX, -(sp) ; Maximum was checked in the last call.
 mov #-1., -(sp) ; Minimum will be checked.
 
 changedB: ; Changed maximum\minimum value.
