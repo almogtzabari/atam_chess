@@ -137,6 +137,12 @@ sub 14.(sp), (sp)
 mov 12.(sp), -(sp)
 sub #1., (sp)
 jsr pc, getWPRec
+; Checking if it is the first move. If yes, we will handle it seperatly.
+add #1, (sp) ; Adding 1 to current steps because we reduced it by 1 before.
+cmp (sp), Steps ; Checking if current steps is the global steps (aka first move).
+beq firstMov ; if current steps = global steps - go to firstMov to handle it.
+sub #1, (sp) ; Restoring steps to what it was before the cmp.
+
 ; Checking the returned values and updating if needed:
 cmp #1., 18.(sp) ; Checks what the caller function (father) was looking for.
 beq wasMax ; Jumps if the father was looking for maximum.
@@ -161,12 +167,43 @@ mov 10.(sp), 24.(sp) ; Updating father's SrcPos.
 add #12., sp ; Popping unnecessary data from stack.
 rts pc
 
+firstMov:
+; If we got here then in the first move the player we check cannot move. therefore
+; we need to find any piece of his and update the src and dst to the location of
+; that piece.
+sub #1, (sp) ; Restoring steps to what it was before the cmp after jsr.
+mov #Board, -(sp) ; will be used to scan for a piece.
+fPiece:
+cmp @(sp), Player
+beq pieceF ; Piece found - go to update src and dst.
+add #2, (sp) ; Continue checking in the next cell.
+br fPiece
+pieceF:
+mov 8.(sp), 22.(sp) ; Updating father's wp.
+mov (sp), 24.(sp) ; Updating father's DstPos.
+mov (sp)+, 24.(sp) ; Updating father's SrcPos.
 noUp:
 ; If we got here we do not need to update.
 add #12., sp ; Popping unnecessary data from stack.
 rts pc
 
 whoWon:
+cmp 6(sp), Steps
+bne goOn
+; This code will update Src and Dst in situations of instant win, meaning the
+; given board is already in a state of win.
+mov #Board, -(sp)
+fwinPiece: ; finding any piece of the winner.(reminder: this is an instant win)
+cmp @(sp), Player
+beq pFound ; Piece Found
+add #2, (sp)
+br fwinPiece
+pFound:
+mov (sp), 16.(sp) ; Updating father's DstPos.
+mov (sp)+, 16.(sp) ; Updating father's SrcPos.
+
+
+goOn:
 ; Checks who won.
 cmp (sp)+, Player ; Check if the current player is the one we check.
 bne playerLos ; Jumps if the winner is not who we check.
@@ -465,6 +502,16 @@ add #4., sp ; Popping unnecessary data from stack.
 jmp NextCell ; Current black piece cannot move anymore. Go to next cell.
 
 
+;------------------------------------------------------------------------------;
+;             The functions we were asked to write
+;------------------------------------------------------------------------------;
+;     1. checkWin                                                              ;
+;     2. calcWP                                                                ;
+;     3. movePiece                                                             ;
+;     4. minOrMax                                                              ;
+;     5. getMaxWP - At the top of this file.                                   ;
+;------------------------------------------------------------------------------;
+
 ; This method checks if a given board is in a winning state for the given player.
 ; Input:
 ; 1. A number of player to check - will be stored in 4(sp).
@@ -567,7 +614,6 @@ rts pc
 ; 1. Source position - will be stored at r5 - inline
 ; 2. Destanation position - will be stored at 2(r5) - inline
 ; 3. Label of the board - will be stored at 2(sp).
-
 movPiece:
          mov r1, -(sp) ; Backing up  r1.
          mov r3, -(sp) ; Backing up  r3.
@@ -639,7 +685,6 @@ minOrMax:
                  mov #1, r4 ; r4 = 1.
                  rts pc
 ; END OF minOrMax
-
 
 ; ------------------------- HELPING FUNCTIONS -------------------------
 ; 1. WhiteMov - Making a move for white piece and calls the recursive function.
@@ -1161,24 +1206,3 @@ bne SkipCell ;If the cell is not empty, cannot eat. Skip to the next cell.
 add #1, 12.(sp) ;If we got here, can eat. Adding 1 to number of legal moves.
 br canMove ;Found a legal move.
 ; END OF hasMove
-
-.=torg+11000
-Board:
-.word 0,0,0,0,0,0,0,0
-.word 0,0,0,0,0,0,0,0
-.word 0,0,0,0,0,2,0,0
-.word 0,0,2,0,0,0,1,0
-.word 0,0,0,0,0,0,0,0
-.word 0,0,2,0,0,0,0,0
-.word 0,1,0,0,0,0,0,0
-.word 0,0,0,0,0,0,0,0
-Player:.word 2
-Steps:.word 2
-
-;output
-;25
-SrcPos: .blkw 1
-;47
-DstPos: .blkw 1
-;20
-WinParam: .blkw 1
