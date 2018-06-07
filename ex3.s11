@@ -1,12 +1,5 @@
 
 .=torg+1000
-
-;-----------------------------------------------------------------------------//
-;                               Defines:                                      //
-;-----------------------------------------------------------------------------//
-ABSOLUTE_MIN = 100001
-ABSOLUTE_MAX = 011111
-
 main:
 mov #main, sp
 mov #SrcPos, -(sp)
@@ -32,7 +25,7 @@ getMaxWP:
 ; Preparing the stack for the first call.
 mov #0, -(sp) ; Allocating place source position in stack.
 mov #0, -(sp) ; Allocating place destenation position in stack.
-mov #ABSOLUTE_MIN, -(sp) ; Allocating place for WP in stack.
+mov #-100., -(sp) ; Allocating place for WP in stack.
 mov #1, -(sp) ;  Allocating place for minOrMax of the first player.
 mov Player, -(sp) ; Pushing the player we check to the stack.
 mov Steps, -(sp) ; Pushing number of steps to stack.
@@ -126,13 +119,13 @@ mov #0, -(sp) ; Allocating space for DstPos.
 cmp 10.(sp), #1 ; Checks what the caller function (father) was looking for.
 bne putMax ; Jumps if the father was looking for minimum.
 ; Father was looking for maximum. Now we should put minimum:
-mov #ABSOLUTE_MAX, -(sp) ; Pushing wp. WP = MAX_VALUE
+mov #100., -(sp) ; Pushing wp. WP = MAX_VALUE
 mov #-1., -(sp) ; Pushing -1. This means that we are looking for minimum now.
 jmp cont ; Done changing max->min.
 
 putMax:
 ; Father was looking for minimum. Now we should put maximum:
-mov #ABSOLUTE_MIN, -(sp) ; Pushing wp. WP = MIN_VALUE
+mov #-100., -(sp) ; Pushing wp. WP = MIN_VALUE
 mov #1., -(sp) ; Pushing -1. This means that we are looking for maximum now.
 
 cont:
@@ -621,7 +614,7 @@ movPiece:
                 mov (sp)+, r3 ; Restoring value of r4.
                 mov (sp)+, r1 ; Restoring value of r3.
                 rts r5
-; END OF MovePiece
+; END OF movPiece
 
 ; This method checks whether we need to look for maximum WP or for minimum WP.
 ;
@@ -645,8 +638,8 @@ minOrMax:
          needmax:
                  mov #1, r4 ; r4 = 1.
                  rts pc
-
 ; END OF minOrMax
+
 
 ; ------------------------- HELPING FUNCTIONS -------------------------
 ; 1. WhiteMov - Making a move for white piece and calls the recursive function.
@@ -686,12 +679,12 @@ cmp #1, 26.(sp) ; Checking if minimum or maximum was checked in the last call.
 beq chngMin ; Changing maximum to minimum.
 
 ; If we got here in the next REC we will check for maximum
-mov #ABSOLUTE_MIN, -(sp) ; Miminum was checked in the last call.
+mov #-100., -(sp) ; Miminum was checked in the last call.
 mov #1, -(sp) ; Maximum will be checked.
 br changed
 
 chngMin: ; Changing maximum to minimum.
-mov #ABSOLUTE_MAX, -(sp) ; Maximum was checked in the last call.
+mov #100., -(sp) ; Maximum was checked in the last call.
 mov #-1., -(sp) ; Minimum will be checked.
 
 changed: ; Changed maximum\minimum value.
@@ -810,12 +803,12 @@ cmp #1, 26.(sp) ; Checking if minimum or maximum was checked in the last call.
 beq chngMinB ; Changing maximum to minimum.
 
 ; If we got here in the next REC we will check for maximum
-mov #ABSOLUTE_MIN, -(sp) ; Miminum was checked in the last call.
+mov #-100., -(sp) ; Miminum was checked in the last call.
 mov #1, -(sp) ; Maximum will be checked.
 br changedB
 
 chngMinB: ; Changing maximum to minimum.
-mov #ABSOLUTE_MAX, -(sp) ; Maximum was checked in the last call.
+mov #100., -(sp) ; Maximum was checked in the last call.
 mov #-1., -(sp) ; Minimum will be checked.
 
 changedB: ; Changed maximum\minimum value.
@@ -1168,3 +1161,24 @@ bne SkipCell ;If the cell is not empty, cannot eat. Skip to the next cell.
 add #1, 12.(sp) ;If we got here, can eat. Adding 1 to number of legal moves.
 br canMove ;Found a legal move.
 ; END OF hasMove
+
+.=torg+11000
+Board:
+.word 0,0,0,0,0,0,0,0
+.word 0,0,0,0,0,0,0,0
+.word 0,0,0,0,0,2,0,0
+.word 0,0,2,0,0,0,1,0
+.word 0,0,0,0,0,0,0,0
+.word 0,0,2,0,0,0,0,0
+.word 0,1,0,0,0,0,0,0
+.word 0,0,0,0,0,0,0,0
+Player:.word 2
+Steps:.word 2
+
+;output
+;25
+SrcPos: .blkw 1
+;47
+DstPos: .blkw 1
+;20
+WinParam: .blkw 1
